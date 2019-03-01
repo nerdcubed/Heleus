@@ -1,11 +1,13 @@
 import logging
+from discord.ext import commands
 
 
-class CommandLog:
+class CommandLog(commands.Cog):
     """A simple cog to log commands executed."""
     def __init__(self):
         self.log = logging.getLogger('liara.command_log')
 
+    @commands.Cog.listener()
     async def on_command(self, ctx):
         kwargs = ', '.join(['{}={}'.format(k, repr(v)) for k, v in ctx.kwargs.items()])
         args = 'with arguments {} '.format(kwargs) if kwargs else ''

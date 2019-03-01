@@ -20,7 +20,7 @@ def reload_core(liara):
     liara.loop.create_task(liara.get_cog('Core').reload_self())
 
 
-class Core:
+class Core(commands.Cog):
     def __init__(self, liara):
         self.liara = liara
 
@@ -204,6 +204,7 @@ class Core:
 
         self.logger.debug('Cog {} loaded successfully'.format(name))
 
+    @commands.Cog.listener()
     async def on_message(self, message):
         instance = await self.settings.get(self.liara.instance_id, {})
         mode = instance.get('mode', CoreMode.down)
@@ -244,6 +245,7 @@ class Core:
 
         await self.liara.process_commands(message)
 
+    @commands.Cog.listener()
     async def on_command_error(self, context, exception):
         try:
             if isinstance(exception, commands.CommandInvokeError):

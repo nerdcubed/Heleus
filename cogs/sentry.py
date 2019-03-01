@@ -10,7 +10,7 @@ from cogs.utils import checks
 from cogs.utils.storage import RedisCollection
 
 
-class Sentry:
+class Sentry(commands.Cog):
     """A simple cog for bug reports."""
     def __init__(self, liara):
         self.liara = liara
@@ -18,6 +18,7 @@ class Sentry:
         self.client = None
         self.client_lock = Lock(loop=self.liara.loop)
 
+    @commands.Cog.listener()
     async def on_command_error(self, context, exception):
         # raven setup
         if self.client is None:

@@ -17,7 +17,7 @@ class MemberIDConverter(commands.MemberConverter):
                 raise commands.BadArgument()
 
 
-class Moderation:
+class Moderation(commands.Cog):
     def __init__(self, liara):
         self.liara = liara
 

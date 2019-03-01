@@ -35,12 +35,13 @@ def _halt(liara, ignore=None):
     liara.loop.create_task(liara.get_cog('Core').halt_())
 
 
-class Sharding:
+class Sharding(commands.Cog):
     def __init__(self, liara):
         self.liara = liara
         self.lines = []
         self.messages = 0
 
+    @commands.Cog.listener()
     async def on_message(self, _):
         self.messages += 1
 

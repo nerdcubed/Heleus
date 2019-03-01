@@ -8,7 +8,7 @@ from discord.ext import commands
 from cogs.utils import checks
 
 
-class Useful:
+class Useful(commands.Cog):
     def __init__(self, liara):
         self.liara = liara
         self.event_counter = Counter()
@@ -114,6 +114,7 @@ class Useful:
 
         await ctx.send(output)
 
+    @commands.Cog.listener()
     async def on_socket_response(self, resp):
         self.event_counter.update([resp.get('t')])
 

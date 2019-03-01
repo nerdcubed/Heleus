@@ -10,7 +10,7 @@ from cogs.utils import checks
 from cogs.utils.storage import RedisCollection
 
 
-class Pacman:
+class Pacman(commands.Cog):
     """Liara's package manager."""  # TODO: Make this sync repositories over shards' instances
     def __init__(self, liara):
         self.liara = liara
