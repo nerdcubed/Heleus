@@ -52,7 +52,7 @@ def create_bot(auto_shard: bool):
             self.logger = logging.getLogger('liara')
             self.logger.info('Liara is booting, please wait...')
             self.settings = RedisCollection(self.redis, 'settings')
-            self.owner = None  # this gets updated in on_ready
+            self.owner = []  # this gets updated in on_ready
             self.invite_url = None  # this too
             self.send_cmd_help = send_cmd_help
             self.send_command_help = send_cmd_help  # seems more like a method name discord.py would choose
@@ -188,11 +188,17 @@ def create_bot(auto_shard: bool):
                 app_info = await self.application_info()
                 self.invite_url = dutils.oauth_url(app_info.id)
                 self.logger.info('Invite URL: {0}'.format(self.invite_url))
-                self.owner = app_info.owner
+                self.team = app_info.team
+                if self.team:
+                    for member in self.team.members:
+                        if member.membership_state == discord.TeamMembershipState.accepted:
+                            self.owner.append(member)
+                else:
+                    self.owner = [app_info.owner]
             elif self.self_bot:
-                self.owner = self.user
+                self.owner = [self.user]
             else:
-                self.owner = self.get_user(self.args.userbot)
+                self.owner = [self.get_user(self.args.userbot)]
             if self.test:
                 self.logger.info('Test complete, logging out...')
                 await self.logout()
@@ -391,10 +397,15 @@ if __name__ == '__main__':
                       self_bot=cargs.selfbot, pm_help=None, max_messages=message_cache,
                       redis=redis_conn, cargs=cargs, test=cargs.test, name=cargs.name)  # liara-specific args
 
+    print('Ready')
     async def run_bot():
+        print('Pinging redis')
         await liara.redis.ping()
+        print('initialising')
         await liara.init()
+        print('Setting credentials')
         await liara.login(cargs.token, bot=not (cargs.selfbot or userbot))
+        print('Connecting...')
         await liara.connect()
 
     # noinspection PyBroadException

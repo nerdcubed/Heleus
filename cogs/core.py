@@ -35,6 +35,7 @@ class Core(commands.Cog):
         self.global_preconditions_overrides = [self._ignore_overrides]  # overrides to the preconditions
         self._eval = {}
         self.loop = None  # make pycharm stop complaining
+        self.owner_loop = None
 
         for obj in dir(self):  # docstring formatting
             if obj.startswith('_'):
@@ -48,6 +49,7 @@ class Core(commands.Cog):
 
     def __unload(self):
         self.loop.cancel()
+        self.owner_loop.cancel()
 
     async def _cog_loop(self):
         cogs: list = await self.settings.get('cogs', [])
@@ -127,24 +129,36 @@ class Core(commands.Cog):
                 await self._set_guild_setting(int(guild), 'ignores', entry)
             await self.settings.delete('ignores')
 
-        # start the loop
+        # start the loops
         self.loop = self.liara.loop.create_task(self._maintenance_loop())
+        self.owner_loop = self.liara.loop.create_task(self._owner_checks())
+
+    
+    async def _owner_checks(self):
+        # Owner checks
+        while True:
+            app_info = await self.liara.application_info()
+            owners = await self.settings.get('owners', [])
+            owners = list(map(int, owners))
+            if app_info.team:
+                for member in app_info.team.members:
+                    if member.membership_state == discord.TeamMembershipState.accepted and member.id not in owners:
+                        owners.append(member.id)
+            else:
+                if app_info.owner.id not in owners:
+                    owners.append(app_info.owner.id)
+                    await self.settings.set('owners', owners)
+            self.liara.owners = owners
+            # Longer sleep time to be nice to Discord's servers
+            await asyncio.sleep(15)
 
     async def _maintenance_loop(self):
-        app_info = await self.liara.application_info()
         while True:
             if not self.ignore_db:
                 # Loading cogs / Unloading cogs
                 await self._cog_loop()
                 # Prefix changing
                 self.liara.command_prefix = await self.settings.get('prefixes')
-                # Owner checks
-                owners = await self.settings.get('owners', [])
-                owners = list(map(int, owners))
-                if app_info.owner.id not in owners:
-                    owners.append(app_info.owner.id)
-                    await self.settings.set('owners', owners)
-                self.liara.owners = owners
             await asyncio.sleep(1)
 
     async def _ignore_overrides(self, message):
