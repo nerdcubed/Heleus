@@ -397,15 +397,10 @@ if __name__ == '__main__':
                       self_bot=cargs.selfbot, pm_help=None, max_messages=message_cache,
                       redis=redis_conn, cargs=cargs, test=cargs.test, name=cargs.name)  # liara-specific args
 
-    print('Ready')
     async def run_bot():
-        print('Pinging redis')
         await liara.redis.ping()
-        print('initialising')
         await liara.init()
-        print('Setting credentials')
         await liara.login(cargs.token, bot=not (cargs.selfbot or userbot))
-        print('Connecting...')
         await liara.connect()
 
     # noinspection PyBroadException
