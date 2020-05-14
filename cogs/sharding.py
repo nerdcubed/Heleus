@@ -87,14 +87,13 @@ class Sharding(commands.Cog):
                         datetime.datetime.utcfromtimestamp(state.get('host_uptime', 0)) if state.get('host_uptime')
                         else '']
                 table.append(line)
-        table = '```prolog\n{}\n```'.format(
-            tabulate.tabulate(table, tablefmt='psql', headers='firstrow'))
+        table = f'```prolog\n{tabulate.tabulate(table, tablefmt='psql', headers='firstrow')}\n```'
         await msg.edit(content=table)
 
     @shards.command()
     async def get(self, ctx):
         """Gets the current shard."""
-        await ctx.send('I am shard {} of {}.'.format(self.liara.shard_id+1, self.liara.shard_count))
+        await ctx.send(f'I am shard {self.liara.shard_id+1} of {self.liara.shard_count}.')
 
     @shards.command()
     @checks.is_owner()

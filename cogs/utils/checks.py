@@ -8,7 +8,7 @@ def owner_check(ctx):
 
 async def role_check(ctx, _role):
     roles = {x.name.lower() for x in ctx.author.roles}
-    settings = await ctx.bot.settings.get('guilds:{}'.format(ctx.guild.id), {})
+    settings = await ctx.bot.settings.get(f'guilds:{ctx.guild.id}', {})
     role_settings = settings.get('roles', {})
     role = role_settings.get(_role)
     return role in roles

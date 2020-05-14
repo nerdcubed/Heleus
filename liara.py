@@ -47,8 +47,7 @@ def create_bot(auto_shard: bool):
             self.args = kwargs.pop('cargs', None)
             self.boot_time = time.time()  # for uptime tracking, we'll use this later
             # used for keeping track of *this* instance over reboots
-            self.instance_id = sha256('{}_{}_{}_{}'.format(platform.node(), os.getcwd(), self.args.shard_id,
-                                                           self.args.shard_count).encode()).hexdigest()
+            self.instance_id = sha256(f'{platform.node()}_{os.getcwd()}_{self.args.shard_id}_{self.args.shard_count}'.encode()).hexdigest()
             self.logger = logging.getLogger('liara')
             self.logger.info('Liara is booting, please wait...')
             self.settings = RedisCollection(self.redis, 'settings')
@@ -58,7 +57,7 @@ def create_bot(auto_shard: bool):
             self.send_command_help = send_cmd_help  # seems more like a method name discord.py would choose
             self.self_bot = kwargs.get('self_bot', False)
             db = str(self.redis.connection_pool.connection_kwargs['db'])
-            self.pubsub_id = 'liara.{}.pubsub.code'.format(db)
+            self.pubsub_id = f'liara.{db}.pubsub.code'
             self._pubsub_futures = {}  # futures temporarily stored here
             self._pubsub_broadcast_cache = {}
             self._pubsub_pool = ThreadPoolExecutor(max_workers=1)
@@ -78,7 +77,7 @@ def create_bot(auto_shard: bool):
             loader = await self.settings.get('loader', default)
             self.load_extension(loader)
             if loader != default:
-                self.logger.warning('Using third-party loader and core cog, {0}.'.format(loader))
+                self.logger.warning(f'Using third-party loader and core cog, {loader}.')
 
         def _process_pubsub_event(self, event):
             _id = self.pubsub_id
@@ -178,16 +177,15 @@ def create_bot(auto_shard: bool):
                 return False
 
         async def on_ready(self):
-            await self.redis.set('__info__', 'This database is used by the Liara discord bot, logged in as user {0}.'
-                                 .format(self.user))
+            await self.redis.set('__info__', f'This database is used by the Liara discord bot, logged in as user {self.user}.')
             self.logger.info('Liara is connected!')
-            self.logger.info('Logged in as {0}.'.format(self.user))
+            self.logger.info(f'Logged in as {self.user}.')
             if self.shard_id is not None:
-                self.logger.info('Shard {0} of {1}.'.format(self.shard_id + 1, self.shard_count))
+                self.logger.info(f'Shard {self.shard_id + 1} of {self.shard_count}.')
             if self.user.bot:
                 app_info = await self.application_info()
                 self.invite_url = dutils.oauth_url(app_info.id)
-                self.logger.info('Invite URL: {0}'.format(self.invite_url))
+                self.logger.info(f'Invite URL: {self.invite_url}')
                 self.team = app_info.team
                 if self.team:
                     for member in self.team.members:
@@ -344,7 +342,7 @@ if __name__ == '__main__':
         logger.setLevel(logging.INFO)
 
     if not cargs.stateless:
-        handler = logging.FileHandler('logs/liara_{}.log'.format(now))
+        handler = logging.FileHandler(f'logs/liara_{now}.log')
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
@@ -359,7 +357,7 @@ if __name__ == '__main__':
         discord_logger.setLevel(logging.INFO)
 
     if not cargs.stateless:
-        handler = logging.FileHandler('logs/discord_{}.log'.format(now))
+        handler = logging.FileHandler(f'logs/discord_{now}.log')
         handler.setFormatter(formatter)
         discord_logger.addHandler(handler)
 

@@ -9,12 +9,11 @@ class CommandLog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command(self, ctx):
-        kwargs = ', '.join(['{}={}'.format(k, repr(v)) for k, v in ctx.kwargs.items()])
-        args = 'with arguments {} '.format(kwargs) if kwargs else ''
-        msg = '{0.author} ({0.author.id}) executed command "{0.command}" {1}in {0.guild} ({0.guild.id})' \
-            .format(ctx, args)
+        kwargs = ', '.join([f'{k}={repr(v)}' for k, v in ctx.kwargs.items()])
+        args = f'with arguments {kwargs} ' if kwargs else ''
+        msg = f'{ctx.author} ({ctx.author.id}) executed command "{ctx.command}" {args}in {ctx.guild} ({ctx.guild.id})'
         if ctx.bot.shard_id is not None:
-            msg += ' on shard {}'.format(ctx.bot.shard_id+1)
+            msg += f' on shard {ctx.bot.shard_id+1}'
         self.log.info(msg)
 
 

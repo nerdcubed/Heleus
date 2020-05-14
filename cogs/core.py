@@ -64,7 +64,7 @@ class Core(commands.Cog):
                 except Exception:
                     cogs.remove(cog)
                     edited = True
-                    self.logger.warning('{!r} could not be loaded. This message will not be shown again.'.format(cog))
+                    self.logger.warning(f'{repr(cog)} could not be loaded. This message will not be shown again.')
         if edited:
             await self.settings.set('cogs', cogs)
 
@@ -75,13 +75,13 @@ class Core(commands.Cog):
                 self.liara.unload_extension(cog)
 
     async def _get_guild_setting(self, guild_id, attribute, default=None):
-        guild = await self.settings.get('guilds:{}'.format(guild_id), {})
+        guild = await self.settings.get(f'guilds:{guild_id}', {})
         return guild.get(attribute, default)
 
     async def _set_guild_setting(self, guild_id, attribute, value):
-        guild = await self.settings.get('guilds:{}'.format(guild_id), {})
+        guild = await self.settings.get(f'guilds:{guild_id}', {})
         guild[attribute] = value
-        await self.settings.set('guilds:{}'.format(guild_id), guild)
+        await self.settings.set(f'guilds:{guild_id}', guild)
 
     async def _post(self):
         """Power-on self test. Beep boop."""
@@ -94,7 +94,7 @@ class Core(commands.Cog):
             prefixes = [prefix]
             await self.settings.set('prefixes', prefixes)
         self.liara.command_prefix = prefixes
-        self.logger.info('{}\'s prefixes are: {}'.format(self.liara.name, ', '.join(map(repr, prefixes))))
+        self.logger.info(f'{self.liara.name}\'s prefixes are: {map(repr, prefixes)}')
 
         # Load cogs
         await self._cog_loop()
@@ -204,7 +204,7 @@ class Core(commands.Cog):
     # make IDEA stop acting like a baby
     # noinspection PyShadowingBuiltins
     async def load_cog(self, name):
-        self.logger.debug('Attempting to load cog {}'.format(name))
+        self.logger.debug(f'Attempting to load cog {name}')
 
         if name in self.liara.extensions:
             return
@@ -216,7 +216,7 @@ class Core(commands.Cog):
             cogs.append(name)
             await self.settings.set('cogs', cogs)
 
-        self.logger.debug('Cog {} loaded successfully'.format(name))
+        self.logger.debug(f'Cog {name} loaded successfully')
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -240,8 +240,7 @@ class Core(commands.Cog):
                     await self.liara.process_commands(message)
                     return
             except Exception:
-                self.logger.exception('Removed precondition override "{}", it was malfunctioning.'
-                                      .format(override.__name__))
+                self.logger.exception(f'Removed precondition override "{override.__name__}", it was malfunctioning.')
                 self.global_preconditions_overrides.remove(override)
         # Preconditions
         for precondition in self.global_preconditions:
@@ -253,8 +252,7 @@ class Core(commands.Cog):
                 if out is False:
                     return
             except Exception:
-                self.logger.exception('Removed precondition "{}", it was malfunctioning.'
-                                      .format(precondition.__name__))
+                self.logger.exception(f'Removed precondition "{precondition.__name__}", it was malfunctioning.')
                 self.global_preconditions.remove(precondition)
 
         await self.liara.process_commands(message)
@@ -271,9 +269,7 @@ class Core(commands.Cog):
                     else:
                         return  # don't care, don't log
 
-                error = '`{}` in command `{}`: ```py\n{}\n```'.format(type(exception).__name__,
-                                                                      context.command.qualified_name,
-                                                                      self.get_traceback(exception))
+                error = f'`{type(exception).__name__}` in command `{context.command.qualified_name}`: ```py\n{self.get_traceback(exception)}\n```'
 
                 detail = {
                     'guild_id': context.guild and context.guild.id,
@@ -295,8 +291,7 @@ class Core(commands.Cog):
                         'traceback': self.get_traceback(exception)
                     }
                 }
-                self.logger.error('An exception occurred in the command {}:\n{}'
-                                  .format(context.command.qualified_name, self.get_traceback(exception)),
+                self.logger.error(f'An exception occurred in the command {context.command.qualified_name}:\n{self.get_traceback(exception)}',
                                   exc_info=detail)
                 if self.informative_errors:
                     if self.verbose_errors:
@@ -353,7 +348,7 @@ class Core(commands.Cog):
         - username: The username to use
         """
         await self.liara.user.edit(username=username)
-        await ctx.send('Username changed. Please call me {} from now on.'.format(username))
+        await ctx.send(f'Username changed. Please call me {username} from now on.')
 
     @set_cmd.command()
     @checks.is_owner()
@@ -401,13 +396,12 @@ class Core(commands.Cog):
         roles = await self._get_guild_setting(ctx.guild.id, 'roles', {})
         if role is not None:
             roles['admin'] = role
-            await ctx.send('Admin role set to `{}` successfully.'.format(role))
+            await ctx.send(f'Admin role set to `{role}` successfully.')
         else:
             if 'admin' in roles:
                 roles.pop('admin')
             await ctx.send('Admin role cleared.\n'
-                           'If you didn\'t intend to do this, use `{}help set admin` for help.'
-                           .format(ctx.prefix))
+                           f'If you didn\'t intend to do this, use `{ctx.prefix}help set admin` for help.')
         await self._set_guild_setting(ctx.guild.id, 'roles', roles)
 
     @set_cmd.command()
@@ -423,13 +417,12 @@ class Core(commands.Cog):
         roles = await self._get_guild_setting(ctx.guild.id, 'roles', {})
         if role is not None:
             roles['mod'] = role
-            await ctx.send('Moderator role set to `{}` successfully.'.format(role))
+            await ctx.send(f'Moderator role set to `{role}` successfully.')
         else:
             if 'mod' in roles:
                 roles.pop('mod')
             await ctx.send('Moderator role cleared.\n'
-                           'If you didn\'t intend to do this, use `{}help set moderator` for help.'
-                           .format(ctx.prefix))
+                           f'If you didn\'t intend to do this, use `{ctx.prefix}help set moderator` for help.')
         await self._set_guild_setting(ctx.guild.id, 'roles', roles)
 
     @set_cmd.group(name='ignore', invoke_without_command=True)
@@ -504,8 +497,7 @@ class Core(commands.Cog):
                     return True
                 else:
                     return False
-            await ctx.send('Are you sure? I have been up since {}.'.format(datetime.datetime.fromtimestamp
-                                                                           (self.liara.boot_time)))
+            await ctx.send('Are you sure? I have been up since {datetime.datetime.fromtimestamp(self.liara.boot_time)}.')
             message = await self.liara.wait_for('message', check=check)
             if message.content.lower() not in ['yes', 'yep', 'i\'m sure']:
                 return await ctx.send('Halt aborted.')
@@ -525,10 +517,9 @@ class Core(commands.Cog):
 
         try:
             await self.load_cog(name)
-            await ctx.send('`{}` loaded sucessfully.'.format(name))
+            await ctx.send(f'`{name}` loaded sucessfully.')
         except Exception as e:
-            await ctx.send('Unable to load; the cog caused a `{}`:\n```py\n{}\n```'
-                           .format(type(e).__name__, self.get_traceback(e)))
+            await ctx.send(f'Unable to load; the cog caused a `{type(e).__name__}`:\n```py\n{self.get_traceback(e)}\n```')
 
     @commands.command()
     @checks.is_owner()
@@ -546,7 +537,7 @@ class Core(commands.Cog):
             cogs = await self.settings.get('cogs')
             cogs.remove(name)
             await self.settings.set('cogs', cogs)
-            await ctx.send('`{}` unloaded successfully.'.format(name))
+            await ctx.send(f'`{name}` unloaded successfully.')
         else:
             await ctx.send('Unable to unload; that cog isn\'t loaded.')
 
@@ -559,14 +550,14 @@ class Core(commands.Cog):
             await ctx.send('Command dispatched, reloading core on all shards now.')
             return
         if name in list(self.liara.extensions):
-            msg = await ctx.send('`{}` reloading...'.format(name))
+            msg = await ctx.send(f'`{name}` reloading...')
             self.liara.unload_extension(name)
             await self.load_cog(name)
             if name in list(self.liara.extensions):
-                await msg.edit(content='`{}` reloaded successfully.'.format(name))
+                await msg.edit(content=f'`{name}` reloaded successfully.')
             else:
-                await msg.edit(content='`{}` reloaded unsuccessfully on a non-main shard. Check your shard\'s logs for '
-                                       'more details. The cog has not been loaded on the main shard.'.format(name))
+                await msg.edit(content=f'`{name}` reloaded unsuccessfully on a non-main shard. Check your shard\'s logs for '
+                                       'more details. The cog has not been loaded on the main shard.')
         else:
             await ctx.send('Unable to reload, that cog isn\'t loaded.')
 
@@ -596,8 +587,7 @@ class Core(commands.Cog):
         # let's make this safe to work with
         code = code.replace('```py\n', '').replace('```', '').replace('`', '')
 
-        _code = 'async def func(self):\n  try:\n{}\n  finally:\n    self._eval[\'env\'].update(locals())'\
-            .format(textwrap.indent(code, '    '))
+        _code = f'async def func(self):\n  try:\n{textwrap.indent(code, '    ')}\n  finally:\n    self._eval[\'env\'].update(locals())'
 
         before = time.monotonic()
         # noinspection PyBroadException
@@ -617,7 +607,7 @@ class Core(commands.Cog):
 
         code = code.split('\n')
         if len(code) == 1:
-            _in = 'In [{}]: {}'.format(count, code[0])
+            _in = f'In [{count}]: {code[0]}'
         else:
             _first_line = code[0]
             _rest = code[1:]
@@ -625,15 +615,14 @@ class Core(commands.Cog):
             _countlen = len(str(count)) + 2
             _rest = textwrap.indent(_rest, '...: ')
             _rest = textwrap.indent(_rest, ' ' * _countlen)
-            _in = 'In [{}]: {}\n{}'.format(count, _first_line, _rest)
+            _in = f'In [{count}]: {_first_line}\n{_rest}'
 
-        #message = '```py\n{}'.format(_in)
         message = _in
         if output is not None:
-            message += '\nOut[{}]: {}'.format(count, output)
+            message += f'\nOut[{count}]: {output}'
         ms = int(round((after - before) * 1000))
         if ms > 100:  # noticeable delay
-            message += '\n# {} ms\n'.format(ms)
+            message += f'\n# {ms} ms\n'
 
         try:
             if ctx.author.id == self.liara.user.id:
