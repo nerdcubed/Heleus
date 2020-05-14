@@ -6,6 +6,7 @@ import random
 import textwrap
 import time
 import traceback
+import os
 
 import aiohttp
 import discord
@@ -36,6 +37,7 @@ class Core(commands.Cog):
         self._eval = {}
         self.loop = None  # make pycharm stop complaining
         self.owner_loop = None
+        self.haste_url = os.environ.get('LIARA_HASTE_URL', 'https://hastebin.com')
 
         for obj in dir(self):  # docstring formatting
             if obj.startswith('_'):
@@ -185,11 +187,9 @@ class Core(commands.Cog):
             if message.guild.id in ignores:
                 return False
 
-    @staticmethod
-    async def create_gist(content, filename='output.py'):
-        github_file = {'files': {filename: {'content': str(content)}}}
+    async def create_haste(self, content):
         async with aiohttp.ClientSession() as session:
-            async with session.post('https://api.github.com/gists', data=json.dumps(github_file)) as response:
+            async with session.post(f'{self.haste_url}/documents', data=content) as response:
                 return await response.json()
 
     @staticmethod
@@ -627,25 +627,25 @@ class Core(commands.Cog):
             _rest = textwrap.indent(_rest, ' ' * _countlen)
             _in = 'In [{}]: {}\n{}'.format(count, _first_line, _rest)
 
-        message = '```py\n{}'.format(_in)
+        #message = '```py\n{}'.format(_in)
+        message = _in
         if output is not None:
             message += '\nOut[{}]: {}'.format(count, output)
         ms = int(round((after - before) * 1000))
         if ms > 100:  # noticeable delay
-            message += '\n# {} ms\n```'.format(ms)
-        else:
-            message += '\n```'
+            message += '\n# {} ms\n'.format(ms)
 
         try:
             if ctx.author.id == self.liara.user.id:
-                await ctx.message.edit(content=message)
+                await ctx.message.edit(content=f'```py\n{message}\n```')
             else:
-                await ctx.send(message)
+                await ctx.send(f'```py\n{message}\n```')
         except discord.HTTPException:
             await ctx.trigger_typing()
-            gist = await self.create_gist(message, filename='message.md')
-            await ctx.send('Sorry, that output was too large, so I uploaded it to gist instead.\n'
-                           '{}'.format(gist['html_url']))
+
+            haste = await self.create_haste(message)
+            await ctx.send('Sorry, that output was too large, so I uploaded it to Hastebin instead.\n'
+                           f'{self.haste_url}/{haste["key"]}.py')
 
 
 def setup(liara):
