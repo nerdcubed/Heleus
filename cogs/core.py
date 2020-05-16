@@ -94,7 +94,7 @@ class Core(commands.Cog):
             prefixes = [prefix]
             await self.settings.set('prefixes', prefixes)
         self.liara.command_prefix = prefixes
-        self.logger.info(f'{self.liara.name}\'s prefixes are: {map(repr, prefixes)}')
+        self.logger.info(f'{self.liara.name}\'s prefixes are: {", ".join(map(repr, prefixes))}')
 
         # Load cogs
         await self._cog_loop()
@@ -387,16 +387,16 @@ class Core(commands.Cog):
     @commands.guild_only()
     @checks.admin_or_permissions()
     @checks.is_not_selfbot()
-    async def admin(self, ctx, *, role: str=None):
+    async def admin(self, ctx, *, role: discord.Role=None):
         """Sets {}'s admin role.
-        Roles are non-case sensitive.
+        Roles are case sensitive.
 
-        - role: The name of the role to use as the admin role
+        - role: The role to use as the admin role
         """
         roles = await self._get_guild_setting(ctx.guild.id, 'roles', {})
         if role is not None:
-            roles['admin'] = role
-            await ctx.send(f'Admin role set to `{role}` successfully.')
+            roles['admin'] = role.id
+            await ctx.send(f'Admin role set to `{role.name}` successfully.')
         else:
             if 'admin' in roles:
                 roles.pop('admin')
@@ -408,15 +408,15 @@ class Core(commands.Cog):
     @commands.guild_only()
     @checks.admin_or_permissions()
     @checks.is_not_selfbot()
-    async def moderator(self, ctx, *, role: str=None):
+    async def moderator(self, ctx, *, role: discord.Role=None):
         """Sets {}'s moderator role.
-        Roles are non-case sensitive.
+        Roles are case sensitive.
 
-        - role: The name of the role to use as the moderator role
+        - role: The role to use as the moderator role
         """
         roles = await self._get_guild_setting(ctx.guild.id, 'roles', {})
         if role is not None:
-            roles['mod'] = role
+            roles['mod'] = role.id
             await ctx.send(f'Moderator role set to `{role}` successfully.')
         else:
             if 'mod' in roles:
@@ -587,7 +587,7 @@ class Core(commands.Cog):
         # let's make this safe to work with
         code = code.replace('```py\n', '').replace('```', '').replace('`', '')
 
-        _code = f'async def func(self):\n  try:\n{textwrap.indent(code, '    ')}\n  finally:\n    self._eval[\'env\'].update(locals())'
+        _code = f'async def func(self):\n  try:\n{textwrap.indent(code, "    ")}\n  finally:\n    self._eval[\'env\'].update(locals())'
 
         before = time.monotonic()
         # noinspection PyBroadException
