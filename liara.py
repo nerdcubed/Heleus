@@ -215,12 +215,9 @@ def create_bot(auto_shard: bool):
 async def send_cmd_help(ctx):
     ctx.invoked_with = 'help'
     if ctx.invoked_subcommand:
-        _help = await ctx.bot.formatter.format_help_for(ctx, ctx.invoked_subcommand)
+        await ctx.send_help((ctx.invoked_subcommand))
     else:
-        _help = await ctx.bot.formatter.format_help_for(ctx, ctx.command)
-    for page in _help:
-        # noinspection PyUnresolvedReferences
-        await ctx.send(page)
+        await ctx.send_help((ctx.command))
 
 
 if __name__ == '__main__':
