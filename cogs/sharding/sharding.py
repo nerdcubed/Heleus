@@ -133,10 +133,3 @@ class Sharding(commands.Cog):
         await self.liara.run_on_shard('all', _halt, self.liara.shard_id)
         await msg.edit(content='Thank you for using Liara.')
         await self.liara.get_cog('Core').halt_()
-
-
-def setup(liara):
-    if liara.shard_id is not None:
-        liara.add_cog(Sharding(liara))
-    else:
-        raise RuntimeError('this cog requires your bot to be sharded')

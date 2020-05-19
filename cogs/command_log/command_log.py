@@ -15,7 +15,3 @@ class CommandLog(commands.Cog):
         if ctx.bot.shard_id is not None:
             msg += f' on shard {ctx.bot.shard_id+1}'
         self.log.info(msg)
-
-
-def setup(liara):
-    liara.add_cog(CommandLog())

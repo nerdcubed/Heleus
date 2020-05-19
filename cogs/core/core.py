@@ -635,7 +635,3 @@ class Core(commands.Cog):
             haste = await self.create_haste(message)
             await ctx.send('Sorry, that output was too large, so I uploaded it to Hastebin instead.\n'
                            f'{self.haste_url}/{haste["key"]}.py')
-
-
-def setup(liara):
-    liara.add_cog(Core(liara))
