@@ -87,7 +87,7 @@ class Sharding(commands.Cog):
                         datetime.datetime.utcfromtimestamp(state.get('host_uptime', 0)) if state.get('host_uptime')
                         else '']
                 table.append(line)
-        table = f'```prolog\n{tabulate.tabulate(table, tablefmt='psql', headers='firstrow')}\n```'
+        table = f'```prolog\n{tabulate.tabulate(table, tablefmt="psql", headers="firstrow")}\n```'
         await msg.edit(content=table)
 
     @shards.command()
