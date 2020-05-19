@@ -12,9 +12,9 @@ import aiohttp
 import discord
 from discord.ext import commands
 
-from cogs.utils import checks
-from cogs.utils.runtime import CoreMode
-from cogs.utils.storage import RedisCollection
+from utils import checks
+from utils.runtime import CoreMode
+from utils.storage import RedisCollection
 
 
 def reload_core(liara):

@@ -1,6 +1,6 @@
 # noinspection PyUnresolvedReferences
 import __main__
-from cogs.utils.storage import RedisDict
+from utils.storage import RedisDict
 
 
 # noinspection PyPep8Naming

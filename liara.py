@@ -20,7 +20,7 @@ import aredis
 from discord import utils as dutils
 from discord.ext import commands
 
-from cogs.utils.storage import RedisCollection
+from utils.storage import RedisCollection
 
 
 class NoResponse:
