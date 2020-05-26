@@ -10,7 +10,7 @@ import os
 
 import aiohttp
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from utils import checks
 from utils.runtime import CoreMode
@@ -31,12 +31,10 @@ class Core(commands.Cog):
 
         self.settings = RedisCollection(self.liara.redis, 'settings')
         self.logger = self.liara.logger
-        self.liara.loop.create_task(self._post())
+        self._post.start()
         self.global_preconditions = [self._ignore_preconditions]  # preconditions to message processing
         self.global_preconditions_overrides = [self._ignore_overrides]  # overrides to the preconditions
         self._eval = {}
-        self.loop = None  # make pycharm stop complaining
-        self.owner_loop = None
         self.haste_url = os.environ.get('LIARA_HASTE_URL', 'https://hastebin.com')
 
         for obj in dir(self):  # docstring formatting
@@ -50,8 +48,8 @@ class Core(commands.Cog):
             obj.help = obj.help.format(self.liara.name)
 
     def __unload(self):
-        self.loop.cancel()
-        self.owner_loop.cancel()
+        self._maintenance_loop.cancel()
+        self._owner_checks.cancel()
 
     async def _cog_loop(self):
         cogs: list = await self.settings.get('cogs', [])
@@ -83,6 +81,7 @@ class Core(commands.Cog):
         guild[attribute] = value
         await self.settings.set(f'guilds:{guild_id}', guild)
 
+    @tasks.loop(count=1)
     async def _post(self):
         """Power-on self test. Beep boop."""
         self.liara.owners = []
@@ -132,10 +131,10 @@ class Core(commands.Cog):
             await self.settings.delete('ignores')
 
         # start the loops
-        self.loop = self.liara.loop.create_task(self._maintenance_loop())
-        self.owner_loop = self.liara.loop.create_task(self._owner_checks())
+        self._maintenance_loop.start()
+        self._owner_checks.start()
 
-    
+    @tasks.loop(seconds=15)
     async def _owner_checks(self):
         # Owner checks
         while True:
@@ -151,9 +150,8 @@ class Core(commands.Cog):
                     owners.append(app_info.owner.id)
                     await self.settings.set('owners', owners)
             self.liara.owners = owners
-            # Longer sleep time to be nice to Discord's servers
-            await asyncio.sleep(15)
 
+    @tasks.loop(seconds=1)
     async def _maintenance_loop(self):
         while True:
             if not self.ignore_db:
@@ -161,7 +159,6 @@ class Core(commands.Cog):
                 await self._cog_loop()
                 # Prefix changing
                 self.liara.command_prefix = await self.settings.get('prefixes')
-            await asyncio.sleep(1)
 
     async def _ignore_overrides(self, message):
         if isinstance(message.author, discord.Member):
