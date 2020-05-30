@@ -18,25 +18,25 @@ from utils.runtime import CoreMode
 from utils.storage import RedisCollection
 
 
-def reload_core(liara):
-    liara.loop.create_task(liara.get_cog('Core').reload_self())
+def reload_core(heleus):
+    heleus.loop.create_task(heleus.get_cog('Core').reload_self())
 
 
 class Core(commands.Cog):
-    def __init__(self, liara):
-        self.liara = liara
+    def __init__(self, heleus):
+        self.heleus = heleus
 
         self.ignore_db = False
         self.verbose_errors = False  # tracebacks?
         self.informative_errors = True  # info messages based on error
 
-        self.settings = RedisCollection(self.liara.redis, 'settings')
-        self.logger = self.liara.logger
+        self.settings = RedisCollection(self.heleus.redis, 'settings')
+        self.logger = self.heleus.logger
         self._post.start()
         self.global_preconditions = [self._ignore_preconditions]  # preconditions to message processing
         self.global_preconditions_overrides = [self._ignore_overrides]  # overrides to the preconditions
         self._eval = {}
-        self.haste_url = os.environ.get('LIARA_HASTE_URL', 'https://hastebin.com')
+        self.haste_url = os.environ.get('HELEUS_HASTE_URL', 'https://hastebin.com')
         self.cogs_ready = False
 
         for obj in dir(self):  # docstring formatting
@@ -47,7 +47,7 @@ class Core(commands.Cog):
                 continue
             if not obj.help:
                 continue
-            obj.help = obj.help.format(self.liara.name)
+            obj.help = obj.help.format(self.heleus.name)
 
     def __unload(self):
         self._maintenance_loop.cancel()
@@ -62,8 +62,8 @@ class Core(commands.Cog):
     async def _cog_loop(self):
         cogs: list = await self.settings.get('cogs', [])
         edited = False
-        if self.liara.autoload and not self.cogs_ready:
-            for module in self.liara.autoload:
+        if self.heleus.autoload and not self.cogs_ready:
+            for module in self.heleus.autoload:
                 if module.endswith('.*'):
                     submodules = self.fetch_submodules(module)
                     for submodule in submodules:
@@ -77,7 +77,7 @@ class Core(commands.Cog):
             self.cogs_ready = True
         
         for cog in cogs:
-            if cog not in list(self.liara.extensions):
+            if cog not in list(self.heleus.extensions):
                 # noinspection PyBroadException
                 try:
                     await self.load_cog(cog)
@@ -88,11 +88,11 @@ class Core(commands.Cog):
         if edited:
             await self.settings.set('cogs', cogs)
 
-        for cog in list(self.liara.extensions):
+        for cog in list(self.heleus.extensions):
             if cog == 'cogs.core':
                 continue
             if cog not in cogs:
-                self.liara.unload_extension(cog)
+                self.heleus.unload_extension(cog)
 
     async def _get_guild_setting(self, guild_id, attribute, default=None):
         guild = await self.settings.get(f'guilds:{guild_id}', {})
@@ -106,7 +106,7 @@ class Core(commands.Cog):
     @tasks.loop(count=1)
     async def _post(self):
         """Power-on self test. Beep boop."""
-        self.liara.owners = []
+        self.heleus.owners = []
 
         # set prefixes
         prefix = str(random.randint(1, 2**8))
@@ -114,24 +114,24 @@ class Core(commands.Cog):
         if prefixes is None:
             prefixes = [prefix]
             await self.settings.set('prefixes', prefixes)
-        self.liara.command_prefix = prefixes
-        self.logger.info(f'{self.liara.name}\'s prefixes are: {", ".join(map(repr, prefixes))}')
+        self.heleus.command_prefix = prefixes
+        self.logger.info(f'{self.heleus.name}\'s prefixes are: {", ".join(map(repr, prefixes))}')
 
         # Load cogs
         await self._cog_loop()
 
         # Mess with the instance's mode
-        instance = await self.settings.get(self.liara.instance_id, {'mode': CoreMode.boot})
-        if not self.liara.ready:
+        instance = await self.settings.get(self.heleus.instance_id, {'mode': CoreMode.boot})
+        if not self.heleus.ready:
             if instance['mode'] == CoreMode.up:
                 instance['mode'] = CoreMode.boot
-                await self.settings.set(self.liara.instance_id, instance)
+                await self.settings.set(self.heleus.instance_id, instance)
 
-        await self.liara.wait_until_ready()
-        self.liara.ready = True
+        await self.heleus.wait_until_ready()
+        self.heleus.ready = True
         if instance['mode'] == CoreMode.boot:
             instance['mode'] = CoreMode.up
-            await self.settings.set(self.liara.instance_id, instance)
+            await self.settings.set(self.heleus.instance_id, instance)
 
         # migration
         keys = await self.settings.keys()
@@ -160,7 +160,7 @@ class Core(commands.Cog):
     async def _owner_checks(self):
         # Owner checks
         while True:
-            app_info = await self.liara.application_info()
+            app_info = await self.heleus.application_info()
             owners = await self.settings.get('owners', [])
             owners = list(map(int, owners))
             if app_info.team:
@@ -171,7 +171,7 @@ class Core(commands.Cog):
                 if app_info.owner.id not in owners:
                     owners.append(app_info.owner.id)
                     await self.settings.set('owners', owners)
-            self.liara.owners = owners
+            self.heleus.owners = owners
 
     @tasks.loop(seconds=1)
     async def _maintenance_loop(self):
@@ -180,7 +180,7 @@ class Core(commands.Cog):
                 # Loading cogs / Unloading cogs
                 await self._cog_loop()
                 # Prefix changing
-                self.liara.command_prefix = await self.settings.get('prefixes')
+                self.heleus.command_prefix = await self.settings.get('prefixes')
 
     async def _ignore_overrides(self, message):
         if isinstance(message.author, discord.Member):
@@ -217,7 +217,7 @@ class Core(commands.Cog):
                                                   chain=chain))
 
     async def reload_self(self):
-        self.liara.unload_extension('cogs.core')
+        self.heleus.unload_extension('cogs.core')
         self.load_cog('cogs.core')
 
     # make IDEA stop acting like a baby
@@ -225,10 +225,10 @@ class Core(commands.Cog):
     async def load_cog(self, name):
         self.logger.debug(f'Attempting to load cog {name}')
 
-        if name in self.liara.extensions:
+        if name in self.heleus.extensions:
             return
 
-        self.liara.load_extension(name)
+        self.heleus.load_extension(name)
 
         cogs = await self.settings.get('cogs', [])
         if name not in cogs:
@@ -239,12 +239,12 @@ class Core(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        instance = await self.settings.get(self.liara.instance_id, {})
+        instance = await self.settings.get(self.heleus.instance_id, {})
         mode = instance.get('mode', CoreMode.down)
         if mode in (CoreMode.down, CoreMode.boot):
             return
-        if message.author.id in self.liara.owners:  # *always* process owner commands
-            await self.liara.process_commands(message)
+        if message.author.id in self.heleus.owners:  # *always* process owner commands
+            await self.heleus.process_commands(message)
             return
         if mode == CoreMode.maintenance:
             return
@@ -256,7 +256,7 @@ class Core(commands.Cog):
                 if inspect.isawaitable(out):
                     out = await out
                 if out is True:
-                    await self.liara.process_commands(message)
+                    await self.heleus.process_commands(message)
                     return
             except Exception:
                 self.logger.exception(f'Removed precondition override "{override.__name__}", it was malfunctioning.')
@@ -274,7 +274,7 @@ class Core(commands.Cog):
                 self.logger.exception(f'Removed precondition "{precondition.__name__}", it was malfunctioning.')
                 self.global_preconditions.remove(precondition)
 
-        await self.liara.process_commands(message)
+        await self.heleus.process_commands(message)
 
     @commands.Cog.listener()
     async def on_command_error(self, context, exception):
@@ -322,10 +322,10 @@ class Core(commands.Cog):
             if isinstance(exception, commands.CommandNotFound):
                 return  # be nice to other bots
             if isinstance(exception, commands.MissingRequiredArgument):
-                return await self.liara.send_command_help(context)
+                return await self.heleus.send_command_help(context)
             if isinstance(exception, commands.BadArgument):
                 await context.send('Bad argument.')
-                await self.liara.send_command_help(context)
+                await self.heleus.send_command_help(context)
             if isinstance(exception, commands.NoPrivateMessage):
                 # returning to avoid CheckFailure
                 return await context.send('That command is not available in direct messages.')
@@ -342,7 +342,7 @@ class Core(commands.Cog):
     @checks.admin_or_permissions()
     async def set_cmd(self, ctx):
         """Sets {}'s settings."""
-        await self.liara.send_command_help(ctx)
+        await self.heleus.send_command_help(ctx)
 
     @set_cmd.command()
     @checks.is_owner()
@@ -352,10 +352,10 @@ class Core(commands.Cog):
         - prefixes: A list of prefixes to use
         """
         if not prefixes:
-            await self.liara.send_command_help(ctx)
+            await self.heleus.send_command_help(ctx)
             return
 
-        self.liara.command_prefix = prefixes
+        self.heleus.command_prefix = prefixes
         await self.settings.set('prefixes', prefixes)
         await ctx.send('Prefix(es) set.')
 
@@ -366,7 +366,7 @@ class Core(commands.Cog):
 
         - username: The username to use
         """
-        await self.liara.user.edit(username=username)
+        await self.heleus.user.edit(username=username)
         await ctx.send(f'Username changed. Please call me {username} from now on.')
 
     @set_cmd.command()
@@ -382,7 +382,7 @@ class Core(commands.Cog):
         response.close()
         await session.close()
         try:
-            await self.liara.user.edit(avatar=avatar)
+            await self.heleus.user.edit(avatar=avatar)
             await ctx.send('Avatar changed.')
         except discord.errors.InvalidArgument:
             await ctx.send('That image type is unsupported.')
@@ -450,7 +450,7 @@ class Core(commands.Cog):
     @commands.guild_only()
     async def ignore_cmd(self, ctx):
         """Helps you ignore/unignore servers/channels."""
-        await self.liara.send_command_help(ctx)
+        await self.heleus.send_command_help(ctx)
 
     @ignore_cmd.command()
     @checks.admin_or_permissions()
@@ -498,10 +498,10 @@ class Core(commands.Cog):
 
     async def halt_(self):
         self.ignore_db = True
-        for cog in list(self.liara.extensions):
-            self.liara.unload_extension(cog)
+        for cog in list(self.heleus.extensions):
+            self.heleus.unload_extension(cog)
         await asyncio.sleep(2)  # to let some functions clean up their mess
-        await self.liara.logout()
+        await self.heleus.logout()
 
     @commands.command(aliases=['shutdown'])
     @checks.is_owner()
@@ -516,8 +516,8 @@ class Core(commands.Cog):
                     return True
                 else:
                     return False
-            await ctx.send('Are you sure? I have been up since {datetime.datetime.fromtimestamp(self.liara.boot_time)}.')
-            message = await self.liara.wait_for('message', check=check)
+            await ctx.send(f'Are you sure? I have been up since {datetime.datetime.fromtimestamp(self.heleus.boot_time)}.')
+            message = await self.heleus.wait_for('message', check=check)
             if message.content.lower() not in ['yes', 'yep', 'i\'m sure']:
                 return await ctx.send('Halt aborted.')
         await ctx.send('\N{WAVING HAND SIGN}')
@@ -531,7 +531,7 @@ class Core(commands.Cog):
         - name: The name of the cog to load
         """
 
-        if name in self.liara.extensions:
+        if name in self.heleus.extensions:
             return await ctx.send('Unable to load; the cog is already loaded.')
 
         try:
@@ -551,8 +551,8 @@ class Core(commands.Cog):
             await ctx.send('Sorry, I can\'t let you do that. '
                            'If you want to install a custom loader, look into the documentation.')
             return
-        if name in list(self.liara.extensions):
-            self.liara.unload_extension(name)
+        if name in list(self.heleus.extensions):
+            self.heleus.unload_extension(name)
             cogs = await self.settings.get('cogs')
             cogs.remove(name)
             await self.settings.set('cogs', cogs)
@@ -565,14 +565,14 @@ class Core(commands.Cog):
     async def reload(self, ctx, name: str):
         """Reloads a cog."""
         if name == 'core':
-            await self.liara.run_on_shard(None if self.liara.shard_id is None else 'all', reload_core)
+            await self.heleus.run_on_shard(None if self.heleus.shard_id is None else 'all', reload_core)
             await ctx.send('Command dispatched, reloading core on all shards now.')
             return
-        if name in list(self.liara.extensions):
+        if name in list(self.heleus.extensions):
             msg = await ctx.send(f'`{name}` reloading...')
-            self.liara.unload_extension(name)
+            self.heleus.unload_extension(name)
             await self.load_cog(name)
-            if name in list(self.liara.extensions):
+            if name in list(self.heleus.extensions):
                 await msg.edit(content=f'`{name}` reloaded successfully.')
             else:
                 await msg.edit(content=f'`{name}` reloaded unsuccessfully on a non-main shard. Check your shard\'s logs for '
@@ -593,9 +593,9 @@ class Core(commands.Cog):
             self._eval['count'] = 0
 
         self._eval['env'].update({
-            'bot': self.liara,
-            'client': self.liara,
-            'liara': self.liara,
+            'bot': self.heleus,
+            'client': self.heleus,
+            'heleus': self.heleus,
             'ctx': ctx,
             'message': ctx.message,
             'channel': ctx.message.channel,
@@ -644,7 +644,7 @@ class Core(commands.Cog):
             message += f'\n# {ms} ms\n'
 
         try:
-            if ctx.author.id == self.liara.user.id:
+            if ctx.author.id == self.heleus.user.id:
                 await ctx.message.edit(content=f'```py\n{message}\n```')
             else:
                 await ctx.send(f'```py\n{message}\n```')

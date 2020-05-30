@@ -5,7 +5,7 @@ from discord.ext import commands
 class CommandLog(commands.Cog):
     """A simple cog to log commands executed."""
     def __init__(self):
-        self.log = logging.getLogger('liara.command_log')
+        self.log = logging.getLogger('heleus.command_log')
 
     @commands.Cog.listener()
     async def on_command(self, ctx):

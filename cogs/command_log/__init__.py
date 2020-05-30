@@ -1,4 +1,4 @@
 from .command_log import CommandLog
 
-def setup(liara):
-    liara.add_cog(CommandLog())
+def setup(heleus):
+    heleus.add_cog(CommandLog())

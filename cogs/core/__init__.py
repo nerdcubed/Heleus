@@ -1,4 +1,4 @@
 from .core import Core
 
-def setup(liara):
-    liara.add_cog(Core(liara))
+def setup(heleus):
+    heleus.add_cog(Core(heleus))
