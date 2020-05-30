@@ -62,6 +62,10 @@ def create_bot(auto_shard: bool):
             self._pubsub_broadcast_cache = {}
             self._pubsub_pool = ThreadPoolExecutor(max_workers=1)
             self.t1 = threading.Thread(name='pubsub cache', target=self._pubsub_cache_loop, daemon=True)
+            if load_cogs is not None:
+                self.autoload = load_cogs.split(',')
+            else:
+                self.autoload = None
             super().__init__(*args, **kwargs)
 
             self.ready = False  # we expect the loader to set this once ready
@@ -257,6 +261,8 @@ if __name__ == '__main__':
         print('Error parsing environment variable LIARA_MESSAGE_CACHE_COUNT\n'
               'Please check that this can be converted to an integer')
         exit(4)
+    
+    load_cogs = os.environ.get('LIARA_LOAD_COGS', None)
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
@@ -271,6 +277,7 @@ if __name__ == '__main__':
                         default=message_cache, type=int)
     parser.add_argument('--uvloop', help='enables uvloop mode', action='store_true')
     parser.add_argument('--stateless', help='disables file storage', action='store_true')
+    parser.add_argument('--cogs', help='a comma separated list of cogs to automatically load on startup', default=load_cogs)
     parser.add_argument('token', type=str, help='sets the token', default=token, nargs='?')
     shard_grp = parser.add_argument_group('sharding')
     # noinspection PyUnboundLocalVariable
@@ -388,9 +395,10 @@ if __name__ == '__main__':
 
     # if we want to make an auto-reboot loop now, it would be a hell of a lot easier now
     # noinspection PyUnboundLocalVariable
-    liara = liara_cls('!', shard_id=cargs.shard_id, shard_count=cargs.shard_count, description=cargs.description,
-                      self_bot=cargs.selfbot, pm_help=None, max_messages=message_cache,
-                      redis=redis_conn, cargs=cargs, test=cargs.test, name=cargs.name)  # liara-specific args
+    liara = liara_cls('!', load_cogs=cargs.cogs, shard_id=cargs.shard_id, shard_count=cargs.shard_count,
+                      description=cargs.description, self_bot=cargs.selfbot, pm_help=None,
+                      max_messages=message_cache, redis=redis_conn, cargs=cargs, test=cargs.test,
+                      name=cargs.name)  # liara-specific args
 
     async def run_bot():
         await liara.redis.ping()

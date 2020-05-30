@@ -7,6 +7,7 @@ import textwrap
 import time
 import traceback
 import os
+import pkgutil
 
 import aiohttp
 import discord
@@ -36,6 +37,7 @@ class Core(commands.Cog):
         self.global_preconditions_overrides = [self._ignore_overrides]  # overrides to the preconditions
         self._eval = {}
         self.haste_url = os.environ.get('LIARA_HASTE_URL', 'https://hastebin.com')
+        self.cogs_ready = False
 
         for obj in dir(self):  # docstring formatting
             if obj.startswith('_'):
@@ -50,10 +52,30 @@ class Core(commands.Cog):
     def __unload(self):
         self._maintenance_loop.cancel()
         self._owner_checks.cancel()
+    
+    def fetch_submodules(self, module):
+        # Somewhat hacky but OH WELL
+        if module.endswith('.*'):
+            module = module[:-2]
+        return [f'{module}.{x.name}' for x in pkgutil.iter_modules([module])]
 
     async def _cog_loop(self):
         cogs: list = await self.settings.get('cogs', [])
         edited = False
+        if self.liara.autoload and not self.cogs_ready:
+            for module in self.liara.autoload:
+                if module.endswith('.*'):
+                    submodules = self.fetch_submodules(module)
+                    for submodule in submodules:
+                        if submodule not in cogs:
+                            cogs.append(submodule)
+                            edited = True
+                else:
+                    if module not in cogs:
+                        cogs.append(module)
+                        edited = True
+            self.cogs_ready = True
+        
         for cog in cogs:
             if cog not in list(self.liara.extensions):
                 # noinspection PyBroadException
