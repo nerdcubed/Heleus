@@ -5,13 +5,24 @@ from utils import checks
 
 class FancyHelp(commands.HelpCommand):
     COLOUR = discord.Colour.blurple()
-    HIDDEN = "\\🕵️‍"
+    HIDDEN = "🕵️‍"
 
-    def get_ending_note(self):
-        return 'Use {0}{1} [command] for more info on a command.'.format(self.clean_prefix, self.invoked_with)
+    def get_ending_note(self, command = None):
+        if not command:
+            return f'Use {self.clean_prefix}{self.invoked_with} [command] for more info on a command.'
+        if isinstance(command, commands.Group):
+            return (
+                f'To use a subcommand, use {self.clean_prefix}{command.qualified_name} [command].\n'
+                f'Use {self.clean_prefix}{self.invoked_with} {command.qualified_name} [command] for more info on a subcommand.'
+            )
+        else:
+            return None
 
     def get_command_signature(self, command):
-        return '{0.qualified_name} {0.signature}'.format(command)
+        return (
+            f'{self.clean_prefix}{command.qualified_name}'
+            f'{" "+ command.signature if command.signature else ""}'
+            )
     
     def generate_command_strs(self, commands):
         max_length = 0
@@ -19,6 +30,8 @@ class FancyHelp(commands.HelpCommand):
         for command in commands:
             if not command.hidden or is_owner:
                 length = len(command.name)
+                if command.hidden:
+                    length += 2
                 if length > max_length:
                     max_length = length
         command_list = []
@@ -27,7 +40,10 @@ class FancyHelp(commands.HelpCommand):
                 string = f'`{command.name}`'
                 if command.hidden:
                     string += self.HIDDEN
-                for i in range(0, max_length - len(command.name) + 1):
+                    add = -1
+                else:
+                    add = 1
+                for i in range(0, max_length - len(command.name) + add):
                     string += '   '
                 string += command.short_doc
                 # Let's set a somewhat reasonable limit
@@ -36,11 +52,15 @@ class FancyHelp(commands.HelpCommand):
                 command_list.append(string)
         return command_list
     
-    def format_commands(self, formatted_commands:dict):
+    def format_commands(self, formatted_commands:dict, embed = None):
         embeds = []
         char_limit = 0
-
-        embed = discord.Embed(colour=self.COLOUR)
+        if embed:
+            embeds.append(embed)
+            char_limit += len(embed.title) + len(embed.description) + len(embed.footer.text) \
+                + len(embed.author.name) + sum([len(x.name) + len(x.value) for x in embed.fields])
+        else:
+            embed = discord.Embed(colour=self.COLOUR)
         
         for field_name, commands in formatted_commands.items():
             write_desc = False
@@ -53,7 +73,7 @@ class FancyHelp(commands.HelpCommand):
                     embed = discord.Embed(colour=self.COLOUR)
                     char_limit = 8
                     string = ''
-                    field_name = 'ᅟᅟᅟᅟᅟᅟᅟᅟ'
+                    field_name = '   '
                     write_desc = True
                 if len(string) + len(command) + 1 <= (2048 if write_desc else 1024):
                     to_add = command if not string else f'\n{command}'
@@ -64,7 +84,7 @@ class FancyHelp(commands.HelpCommand):
                         embed.description = string
                     embed.add_field(name=field_name, value=string, inline=False)
                     string = ''
-                    field_name = 'ᅟᅟᅟᅟᅟᅟᅟᅟ'
+                    field_name = '   '
                     char_limit += 8
             embed.add_field(name=field_name, value=string, inline=False)
         
@@ -85,7 +105,7 @@ class FancyHelp(commands.HelpCommand):
             embeds = self.format_commands(desc_format)
         else:
             embeds = [discord.Embed(colour=self.COLOUR)]
-        embeds[0].title = 'Bot Commands'
+        embeds[0].title = '❓ Bot Help'
         description = self.context.bot.description
         if description:
             embeds[0].description = description
@@ -95,36 +115,48 @@ class FancyHelp(commands.HelpCommand):
             await self.get_destination().send(embed=embed)
 
     async def send_cog_help(self, cog):
-        embed = discord.Embed(title='{0.qualified_name} Commands'.format(cog), colour=self.COLOUR)
+        embed = discord.Embed(colour=self.COLOUR)
+        embed.set_author(name='❓ Cog Help')
+        embed.description = f'**{cog.qualified_name}**'
         if cog.description:
-            embed.description = cog.description
-
+            embed.description += f'\n\n{cog.description}'
+        
         filtered = await self.filter_commands(cog.get_commands(), sort=True)
-        for command in filtered:
-            embed.add_field(name=self.get_command_signature(command), value=command.short_doc or '...', inline=False)
-
-        embed.set_footer(text=self.get_ending_note())
-        await self.get_destination().send(embed=embed)
+        if filtered:
+            formatted = self.generate_command_strs(filtered)
+            embeds = self.format_commands({'Commands': formatted}, embed)
+            embeds[-1].set_footer(text=self.get_ending_note())
+            for e in embeds:
+                await self.get_destination().send(embed=e)
+        else:
+            embed.set_footer(text=self.get_ending_note())
+            await self.get_destination().send(embed=embed)
 
     async def send_group_help(self, group):
-        embeds = []
+        embed = discord.Embed(colour=self.COLOUR)
+        embed.set_author(name='❓ Command Help')
+        if group.cog:
+            embed.description = f'**{group.cog.qualified_name} • {group.qualified_name}**'
+        else:
+            embed.description = f'**{group.qualified_name}**'
+        
+        embed.add_field(name='Usage', value=f'`{self.get_command_signature(group)}`', inline=False)
+
+        if group.help:
+            embed.add_field(name='Description', value=group.help, inline=False)
+
         if isinstance(group, commands.Group):
             filtered = await self.filter_commands(group.commands, sort=True)
             if filtered:
                 formatted = self.generate_command_strs(filtered)
-                embeds = self.format_commands({'Subcommands': formatted})
-
-        if not embeds:
-            embeds = [discord.Embed(colour=self.COLOUR)]
-        
-        embeds[0].title = group.qualified_name
-
-        if group.help:
-            embeds[0].description = group.help
-
-        embeds[-1].set_footer(text=self.get_ending_note())
-        for embed in embeds:
+                embeds = self.format_commands({'Subcommands': formatted}, embed)
+            embeds[-1].set_footer(text=self.get_ending_note(group))
+            for e in embeds:
+                await self.get_destination().send(embed=e)
+        else:
+            embed.set_footer(text=self.get_ending_note())
             await self.get_destination().send(embed=embed)
+        
 
     send_command_help = send_group_help
 
@@ -134,4 +166,4 @@ class Help(commands.Cog):
     def __init__(self, heleus):
         self.heleus = heleus
         self.group = os.environ.get('HELEUS_HELP_GROUP', 'cog')
-        self.heleus.help_command = FancyHelp()
+        self.heleus.help_command = FancyHelp(show_hidden=True)
