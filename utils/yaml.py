@@ -12,3 +12,9 @@ def get(file:str, schema:strictyaml.Map = None):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), f'{folder}/{file}')
     with open(path, 'r') as f:
         return strictyaml.load(f, schema)
+
+def get_safe(file:str, schema:strictyaml.Map = None):
+    try:
+        return get(file, schema)
+    except:
+        return None
