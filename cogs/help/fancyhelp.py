@@ -5,7 +5,7 @@ from utils import checks
 class FancyHelp(commands.HelpCommand):
     def __init__(self, **options):
         options['show_hidden'] = True
-        self.name = options.pop('name', 'Heleus')
+        self.name = options.pop('name', 'Bot')
         template = options.pop('template', None)
         if template:
             self.template = self.construct_template(template)

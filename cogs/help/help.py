@@ -9,7 +9,7 @@ class Help(commands.Cog):
     def __init__(self, heleus):
         self.heleus = heleus
         self.group = os.environ.get('HELEUS_HELP_GROUP', 'cog')
-        template = yaml.get('help')
+        template = yaml.get_safe('help')
         self.heleus.help_command = FancyHelp(name=heleus.name, template=template, show_hidden=True)
 
     async def on_unload(self):
