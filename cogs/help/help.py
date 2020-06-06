@@ -1,7 +1,7 @@
 import discord
 import os
 from discord.ext import commands
-from utils import checks
+from utils import checks, yaml
 from .fancyhelp import FancyHelp
 
 class Help(commands.Cog):
@@ -9,4 +9,8 @@ class Help(commands.Cog):
     def __init__(self, heleus):
         self.heleus = heleus
         self.group = os.environ.get('HELEUS_HELP_GROUP', 'cog')
-        self.heleus.help_command = FancyHelp(show_hidden=True)
+        template = yaml.get('help')
+        self.heleus.help_command = FancyHelp(name=heleus.name, template=template, show_hidden=True)
+
+    async def on_unload(self):
+        self.heleus.help_command = discord.ext.commands.HelpCommand

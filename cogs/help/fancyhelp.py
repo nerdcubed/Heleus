@@ -3,8 +3,29 @@ from discord.ext import commands
 from utils import checks
 
 class FancyHelp(commands.HelpCommand):
+    def __init__(self, **options):
+        options['show_hidden'] = True
+        self.name = options.pop('name', 'Heleus')
+        template = options.pop('template', None)
+        if template:
+            self.template = self.construct_template(template)
+        else:
+            self.template = None
+        
+        super().__init__(**options)
+
     COLOUR = discord.Colour.blurple()
     HIDDEN = "🕵️‍"
+
+    def construct_template(self, template):
+        if not 'title' in template:
+            template['title'] = f'❓ {self.name} Help'
+        if not 'color' in template:
+            template['colour'] =  7506394
+        if not 'description' in template:
+            template['description'] = self.context.bot.description
+        
+        return discord.Embed().from_dict(template)
 
     def get_ending_note(self, command = None):
         if not command:
@@ -93,6 +114,13 @@ class FancyHelp(commands.HelpCommand):
         return embeds
 
     async def send_bot_help(self, mapping):
+        if self.template:
+            embed = self.template
+        else:
+            embed = discord.Embed(colour=self.COLOUR)
+            embed.title = f'❓ {self.name} Help'
+            embed.description = self.context.bot.description
+
         desc_format = {}
         for cog, commands in mapping.items():
             name = 'No Category' if cog is None else cog.qualified_name
@@ -101,16 +129,11 @@ class FancyHelp(commands.HelpCommand):
                 formatted = self.generate_command_strs(filtered)
                 desc_format[name] = formatted
         if desc_format:
-            embeds = self.format_commands(desc_format)
+            embeds = self.format_commands(desc_format, embed)
+            embeds[-1].set_footer(text=self.get_ending_note())
+            for e in embeds:
+                await self.get_destination().send(embed=e)
         else:
-            embeds = [discord.Embed(colour=self.COLOUR)]
-        embeds[0].title = '❓ Bot Help'
-        description = self.context.bot.description
-        if description:
-            embeds[0].description = description
-
-        embeds[-1].set_footer(text=self.get_ending_note())
-        for embed in embeds:
             await self.get_destination().send(embed=embed)
 
     async def send_cog_help(self, cog):
