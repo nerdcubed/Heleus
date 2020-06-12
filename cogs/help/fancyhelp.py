@@ -1,12 +1,13 @@
 import discord
+from collections import OrderedDict
 from discord.ext import commands
 from utils import checks
 
 class FancyHelp(commands.HelpCommand):
     def __init__(self, **options):
-        options['show_hidden'] = True
         self.name = options.pop('name', 'Bot')
         template = options.pop('template', None)
+        self.group_by = options.pop('group_by', 'cog')
         if template:
             self.template = self.construct_template(template)
         else:
@@ -14,14 +15,13 @@ class FancyHelp(commands.HelpCommand):
         
         super().__init__(**options)
 
-    COLOUR = discord.Colour.blurple()
     HIDDEN = "🕵️‍"
 
     def construct_template(self, template):
         if not 'title' in template:
             template['title'] = f'❓ {self.name} Help'
         if not 'color' in template:
-            template['colour'] =  7506394
+            template['colour'] =  None
         if not 'description' in template:
             template['description'] = self.context.bot.description
         
@@ -79,8 +79,10 @@ class FancyHelp(commands.HelpCommand):
             embeds.append(embed)
             char_limit += len(embed.title) + len(embed.description) + len(embed.footer.text) \
                 + len(embed.author.name) + sum([len(x.name) + len(x.value) for x in embed.fields])
+            colour = embed.colour
         else:
-            embed = discord.Embed(colour=self.COLOUR)
+            colour = discord.Colour.blurple()
+            embed = discord.Embed(colour=colour)
         
         for field_name, commands in formatted_commands.items():
             write_desc = False
@@ -90,7 +92,7 @@ class FancyHelp(commands.HelpCommand):
                 # Grant a little overhead just in case
                 if char_limit + len(command) >= 5500 or len(embed.fields) == 24:
                     embeds.append(embed)
-                    embed = discord.Embed(colour=self.COLOUR)
+                    embed = discord.Embed(colour=colour)
                     char_limit = 8
                     string = ''
                     field_name = '   '
@@ -117,17 +119,33 @@ class FancyHelp(commands.HelpCommand):
         if self.template:
             embed = self.template
         else:
-            embed = discord.Embed(colour=self.COLOUR)
+            embed = discord.Embed(colour=discord.Colour.blurple())
             embed.title = f'❓ {self.name} Help'
             embed.description = self.context.bot.description
 
-        desc_format = {}
-        for cog, commands in mapping.items():
-            name = 'No Category' if cog is None else cog.qualified_name
-            filtered = await self.filter_commands(commands, sort=True)
-            if filtered:
-                formatted = self.generate_command_strs(filtered)
-                desc_format[name] = formatted
+        desc_format = OrderedDict()
+        if self.group_by == 'cog':
+            for cog, commands in mapping.items():
+                name = 'No Category' if cog is None else cog.qualified_name
+                filtered = await self.filter_commands(commands, sort=True)
+                if filtered:
+                    formatted = self.generate_command_strs(filtered)
+                    desc_format[name] = formatted
+        else:
+            groups = {}
+            for cog, commands in mapping.items():
+                filtered = await self.filter_commands(commands, sort=True)
+                if filtered:
+                    if hasattr(cog, 'help_group'):
+                        groups.setdefault(cog.help_group, []).extend(filtered)
+                    else:
+                        groups.setdefault('No Category', []).extend(filtered)
+            groups = OrderedDict(sorted(groups.items()))
+            for group, commands in groups.items():
+                commands.sort(key=lambda x: x.qualified_name)
+                formatted = self.generate_command_strs(commands)
+                desc_format[group] = formatted
+        
         if desc_format:
             embeds = self.format_commands(desc_format, embed)
             embeds[-1].set_footer(text=self.get_ending_note())
@@ -137,9 +155,11 @@ class FancyHelp(commands.HelpCommand):
             await self.get_destination().send(embed=embed)
 
     async def send_cog_help(self, cog):
-        embed = discord.Embed(colour=self.COLOUR)
+        embed = discord.Embed(colour=discord.Colour.blurple())
         embed.set_author(name='❓ Cog Help')
         embed.description = f'**{cog.qualified_name}**'
+        if hasattr(cog, 'help_image'):
+            embed.set_thumbnail(url=cog.help_image)
         if cog.description:
             embed.description += f'\n\n{cog.description}'
         
@@ -155,10 +175,12 @@ class FancyHelp(commands.HelpCommand):
             await self.get_destination().send(embed=embed)
 
     async def send_group_help(self, group):
-        embed = discord.Embed(colour=self.COLOUR)
+        embed = discord.Embed(colour=discord.Colour.blurple())
         embed.set_author(name='❓ Command Help')
         if group.cog:
             embed.description = f'**{group.cog.qualified_name} • {group.qualified_name}**'
+            if hasattr(group.cog, 'help_image'):
+                embed.set_thumbnail(url=group.cog.help_image)
         else:
             embed.description = f'**{group.qualified_name}**'
         

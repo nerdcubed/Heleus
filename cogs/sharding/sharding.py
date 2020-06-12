@@ -40,6 +40,8 @@ class Sharding(commands.Cog):
         self.heleus = heleus
         self.lines = []
         self.messages = 0
+        self.help_group = 'Core'
+        self.help_image = 'https://i.imgur.com/RQmzK6i.png'
 
     @commands.Cog.listener()
     async def on_message(self, _):

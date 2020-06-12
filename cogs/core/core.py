@@ -38,6 +38,8 @@ class Core(commands.Cog):
         self._eval = {}
         self.haste_url = os.environ.get('HELEUS_HASTE_URL', 'https://hastebin.com')
         self.cogs_ready = False
+        self.help_group = 'Core'
+        self.help_image = 'https://i.imgur.com/jLP1NEW.png'
 
         for obj in dir(self):  # docstring formatting
             if obj.startswith('_'):
