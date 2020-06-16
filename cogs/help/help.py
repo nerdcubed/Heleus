@@ -13,6 +13,11 @@ class Help(commands.Cog):
         self.heleus.help_command = FancyHelp(name=heleus.name, template=template, group_by=self.group_type, show_hidden=True)
         self.help_group = 'General'
         self.help_image = 'https://i.imgur.com/AZWeMcH.png'
+        # A bit hacky but oh well.
+        help_command = self.heleus.get_command('help')
+        if help_command:
+            help_command.help_group = self.help_group
+            help_command.help_image = self.help_image
 
     async def on_unload(self):
         self.heleus.help_command = discord.ext.commands.HelpCommand
