@@ -24,6 +24,12 @@ class FancyHelp(commands.HelpCommand):
     # be blank for whatever reason. Discord doesn't
     # like TAB for this.
     BLANK = 'ᅟᅟᅟᅟᅟᅟᅟᅟ'
+    
+    def get_colour(self):
+        if isinstance(self.context.channel, discord.abc.PrivateChannel):
+            return discord.Colour.blurple()
+        colour = self.context.guild.me.colour
+        return colour
 
     def split_description(self, description):
         groups = [x for x in self.regex.findall(description) if len(x[0]) == len(x[1])]
@@ -110,7 +116,7 @@ class FancyHelp(commands.HelpCommand):
                 + len(embed.author.name) + sum([len(x.name) + len(x.value) for x in embed.fields])
             colour = embed.colour
         else:
-            colour = discord.Colour.blurple()
+            colour = self.get_colour()
             embed = discord.Embed(colour=colour)
         
         for field_name, commands in formatted_commands.items():
@@ -148,7 +154,7 @@ class FancyHelp(commands.HelpCommand):
         if self.template:
             embed = self.template
         else:
-            embed = discord.Embed(colour=discord.Colour.blurple())
+            embed = discord.Embed(colour=self.get_colour())
             embed.title = f'❓ {self.name} Help'
             embed.description = self.context.bot.description
 
@@ -184,7 +190,7 @@ class FancyHelp(commands.HelpCommand):
             await self.get_destination().send(embed=embed)
 
     async def send_cog_help(self, cog):
-        embed = discord.Embed(colour=discord.Colour.blurple())
+        embed = discord.Embed(colour=self.get_colour())
         embed.set_author(name='❓ Cog Help')
         embed.description = f'**{cog.qualified_name}**'
         if hasattr(cog, 'help_image'):
@@ -208,7 +214,7 @@ class FancyHelp(commands.HelpCommand):
             await self.get_destination().send(embed=embed)
 
     async def send_group_help(self, group):
-        embed = discord.Embed(colour=discord.Colour.blurple())
+        embed = discord.Embed(colour=self.get_colour())
         embed.set_author(name='❓ Command Help')
         if group.cog:
             embed.description = f'**{group.cog.qualified_name} • {group.qualified_name}**'
