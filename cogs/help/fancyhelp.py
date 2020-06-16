@@ -24,6 +24,15 @@ class FancyHelp(commands.HelpCommand):
     # be blank for whatever reason. Discord doesn't
     # like TAB for this.
     BLANK = 'ᅟᅟᅟᅟᅟᅟᅟᅟ'
+
+    async def can_run(self, cmd):
+        if self.verify_checks:
+            try:
+                return await cmd.can_run(self.context)
+            except commands.CommandError:
+                return False
+        else:
+            return True
     
     def get_colour(self):
         if isinstance(self.context.channel, discord.abc.PrivateChannel):
@@ -209,11 +218,14 @@ class FancyHelp(commands.HelpCommand):
             embeds[-1].set_footer(text=self.get_ending_note())
             for e in embeds:
                 await self.get_destination().send(embed=e)
-        else:
+        elif checks.owner_check(self.context):
+            # Only reveal details about an empty cog to the bot owner
             embed.set_footer(text=self.get_ending_note())
             await self.get_destination().send(embed=embed)
 
     async def send_group_help(self, group):
+        if not await self.can_run(group):
+            return
         embed = discord.Embed(colour=self.get_colour())
         embed.set_author(name='❓ Command Help')
         if group.cog:
@@ -237,9 +249,12 @@ class FancyHelp(commands.HelpCommand):
             if filtered:
                 formatted = self.generate_command_strs(filtered)
                 embeds = self.format_commands({'Subcommands': formatted}, embed)
-            embeds[-1].set_footer(text=self.get_ending_note(group))
-            for e in embeds:
-                await self.get_destination().send(embed=e)
+                embeds[-1].set_footer(text=self.get_ending_note(group))
+                for e in embeds:
+                    await self.get_destination().send(embed=e)
+            else:
+                embed.set_footer(text=self.get_ending_note())
+                await self.get_destination().send(embed=embed)
         else:
             embed.set_footer(text=self.get_ending_note())
             await self.get_destination().send(embed=embed)
