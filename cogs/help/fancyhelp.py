@@ -182,6 +182,12 @@ class FancyHelp(commands.HelpCommand):
                 if filtered:
                     if hasattr(cog, 'help_group'):
                         groups.setdefault(cog.help_group, []).extend(filtered)
+                    elif not cog:
+                        for command in filtered:
+                            if hasattr(command, 'help_group'):
+                                groups.setdefault(command.help_group, []).append(command)
+                            else:
+                                groups.setdefault('No Category', []).append(command)
                     else:
                         groups.setdefault('No Category', []).extend(filtered)
             groups = OrderedDict(sorted(groups.items()))
@@ -230,9 +236,13 @@ class FancyHelp(commands.HelpCommand):
         embed.set_author(name='❓ Command Help')
         if group.cog:
             embed.description = f'**{group.cog.qualified_name} • {group.qualified_name}**'
-            if hasattr(group.cog, 'help_image'):
+            if hasattr(group, 'help_image'):
+                embed.set_thumbnail(url=group.help_image)
+            elif hasattr(group.cog, 'help_image'):
                 embed.set_thumbnail(url=group.cog.help_image)
         else:
+            if hasattr(group, 'help_image'):
+                embed.set_thumbnail(url=group.help_image)
             embed.description = f'**{group.qualified_name}**'
         
         embed.add_field(name='Usage', value=f'`{self.get_command_signature(group)}`', inline=False)
