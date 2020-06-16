@@ -2,6 +2,7 @@ import discord
 from collections import OrderedDict
 from discord.ext import commands
 from utils import checks
+import re
 
 class FancyHelp(commands.HelpCommand):
     def __init__(self, **options):
@@ -12,10 +13,38 @@ class FancyHelp(commands.HelpCommand):
             self.template = self.construct_template(template)
         else:
             self.template = None
+        self.regex = re.compile(r'(^.*)\n(^-+)', re.MULTILINE)
         
         super().__init__(**options)
 
     HIDDEN = "🕵️‍"
+    # Used to help align text outside of code blocks
+    TAB = '   '
+    # Used for when we need an embed field value to
+    # be blank for whatever reason. Discord doesn't
+    # like TAB for this.
+    BLANK = 'ᅟᅟᅟᅟᅟᅟᅟᅟ'
+
+    def split_description(self, description):
+        groups = [x for x in self.regex.findall(description) if len(x[0]) == len(x[1])]
+        if not groups:
+            return description, None
+        topics = []
+        final_desc = None
+        prev = None
+        for title, split in groups:
+            combined = f'{title}\n{split}'
+            sections = description.split(combined)
+            if not final_desc:
+                final_desc = sections.pop(0).strip()
+            elif prev:
+                topics.append((prev, sections.pop(0).strip()))
+            for x in sections[:-1]:
+                topics.append((prev, x))
+            description = sections[-1]
+            prev = title
+        topics.append((prev, description))
+        return final_desc, topics
 
     def construct_template(self, template):
         if not 'title' in template:
@@ -64,7 +93,7 @@ class FancyHelp(commands.HelpCommand):
                 else:
                     add = 1
                 for i in range(0, max_length - len(command.name) + add):
-                    string += '   '
+                    string += self.TAB
                 string += command.short_doc
                 # Let's set a somewhat reasonable limit
                 if len(string) > 512:
@@ -95,7 +124,7 @@ class FancyHelp(commands.HelpCommand):
                     embed = discord.Embed(colour=colour)
                     char_limit = 8
                     string = ''
-                    field_name = '   '
+                    field_name = self.BLANK
                     write_desc = True
                 if len(string) + len(command) + 1 <= (2048 if write_desc else 1024):
                     to_add = command if not string else f'\n{command}'
@@ -106,7 +135,7 @@ class FancyHelp(commands.HelpCommand):
                         embed.description = string
                     embed.add_field(name=field_name, value=string, inline=False)
                     string = ''
-                    field_name = '   '
+                    field_name = self.BLANK
                     char_limit += 8
             embed.add_field(name=field_name, value=string, inline=False)
         
@@ -161,7 +190,11 @@ class FancyHelp(commands.HelpCommand):
         if hasattr(cog, 'help_image'):
             embed.set_thumbnail(url=cog.help_image)
         if cog.description:
-            embed.description += f'\n\n{cog.description}'
+            description, topics = self.split_description(cog.description)
+            embed.description += f'\n\n{description}'
+            if topics:
+                for topic, text in topics:
+                    embed.add_field(name=topic, value=text if text else self.BLANK, inline=False)
         
         filtered = await self.filter_commands(cog.get_commands(), sort=True)
         if filtered:
@@ -187,7 +220,11 @@ class FancyHelp(commands.HelpCommand):
         embed.add_field(name='Usage', value=f'`{self.get_command_signature(group)}`', inline=False)
 
         if group.help:
-            embed.add_field(name='Description', value=group.help, inline=False)
+            description, topics = self.split_description(group.help)
+            embed.add_field(name='Description', value=description, inline=False)
+            if topics:
+                for topic, text in topics:
+                    embed.add_field(name=topic, value=text if text else self.BLANK, inline=False)
 
         if isinstance(group, commands.Group):
             filtered = await self.filter_commands(group.commands, sort=True)
