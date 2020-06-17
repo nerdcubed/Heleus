@@ -8,4 +8,5 @@ env/
 *.iml
 ffmpeg.exe
 .vscode/
-.env
+*.env
+db/
