@@ -16,4 +16,4 @@ RUN apt update && apt -y install libffi-dev python3.7-dev && \
     pip install uvloop
 
 # Run
-CMD ["python", "-u", "./heleus.py"]
+CMD ["python", "-u", "./heleus.py", "--uvloop"]
