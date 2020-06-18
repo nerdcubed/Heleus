@@ -1,5 +1,8 @@
+discord.py[voice]
 aiohttp
 aredis
 dill
 raven
 strictyaml
+tabulate
+psutil
