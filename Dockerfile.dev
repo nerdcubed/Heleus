@@ -8,7 +8,7 @@ COPY . .
 
 # Install requirements
 RUN apt update && apt -y install libffi-dev python3.7-dev && \
-    pip install -r requirements.txt && \
+    pip install -r dev-requirements.txt && \
     pip install uvloop
 
 # Run
