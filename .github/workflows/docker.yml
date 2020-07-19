@@ -43,5 +43,5 @@ jobs:
       - name: Login to Docker Registry
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com --username ${{ steps.prepare.outputs.docker_user }} --password-stdin
       - name: Push to Docker Registry
-        if: (github.ref == 'refs/heads/master') || (contains(github.ref, 'refs/tags/') == true)
+        if: (github.ref == 'refs/heads/main') || (contains(github.ref, 'refs/tags/') == true)
         run: docker push ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}
