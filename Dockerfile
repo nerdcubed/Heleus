@@ -1,4 +1,4 @@
-FROM python:3.7-buster
+FROM python:3.8.4-buster
 
 RUN adduser --disabled-password --disabled-login python
 WORKDIR /app
