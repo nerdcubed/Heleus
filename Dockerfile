@@ -1,15 +1,21 @@
-# Python Image
-FROM python:3.7.7-buster
-ARG ver=main
+FROM python:3.7-buster
+
+RUN adduser --disabled-password --disabled-login python
 WORKDIR /app
 
-# Copy source into container
-COPY . .
+COPY Pipfile Pipfile
+COPY Pipfile.lock Pipfile.lock
 
-# Install requirements
 RUN apt update && apt -y install libffi-dev python3.7-dev && \
-    pip install -r requirements.txt && \
-    pip install uvloop
+    pip3 install -U pipenv uvloop && \
+    pipenv install --deploy --system && \
+    rm -rf /var/lib/apt/lists/*
 
-# Run
+RUN chown -R python:python /app
+USER python
+
+COPY --chown=python:python ./cogs ./cogs
+COPY --chown=python:python ./utils ./utils
+COPY --chown=python:python ./heleus.py ./heleus.py
+
 CMD ["python", "-u", "./heleus.py", "--uvloop"]

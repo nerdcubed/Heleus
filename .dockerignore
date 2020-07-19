@@ -1,0 +1,15 @@
+.git
+__pycache__
+cogs/utils/chat_formatting.py
+.idea/
+data/
+cogs/dev/
+logs/
+env/
+*.iml
+ffmpeg.exe
+.vscode/
+*.env
+db/
+README.md
+.editorconfig
