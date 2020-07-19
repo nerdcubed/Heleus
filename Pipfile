@@ -1,0 +1,19 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+aiohttp = "*"
+aredis = "*"
+dill = "*"
+raven = "*"
+strictyaml = "*"
+tabulate = "*"
+psutil = "*"
+"discord.py" = {extras = ["voice"], git = "https://github.com/Rapptz/discord.py.git", ref = "0bc15fa130b8f01fe2d67446a2184d474b0d0ba7"}
+
+[requires]
+python_version = "3.7"
