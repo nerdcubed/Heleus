@@ -365,16 +365,13 @@ if __name__ == '__main__':
         handler.setFormatter(formatter)
         discord_logger.addHandler(handler)
 
-    # Make it clear that we're not doing any Windows support
-    def warn_win():
-        logger.warning('There is absolutely NO support for Windows-based operating systems. Proceed with caution, '
-                       'because if you mess this up, no one will help you.')
-
-    if sys.platform == 'win32' or sys.platform == 'cygwin':
-        warn_win()
-    if sys.platform == 'linux':
-        if os.path.exists('/dev/lxss'):  # go away, Linux subsystem, you're not real
-            warn_win()
+    def is_docker():
+        path = '/proc/self/cgroup'
+        return (os.path.exists('/.dockerenv') or os.path.isfile(path) and any('docker' in line for line in open(path)))
+    
+    if not is_docker():
+        logger.warning('Running outside of a Docker container, while should work with the right setup, is not officially '
+                       'supported. DO NOT expect any support if things go wrong. You\'ve been warned!')
 
     if cargs.shard_id is not None:  # usability
         cargs.shard_id -= 1
