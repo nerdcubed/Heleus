@@ -1,4 +1,5 @@
 import discord
+import copy
 from collections import OrderedDict
 from discord.ext import commands
 from utils import checks
@@ -120,6 +121,7 @@ class FancyHelp(commands.HelpCommand):
         embeds = []
         char_limit = 0
         if embed:
+            embed = copy.deepcopy(embed)
             embeds.append(embed)
             char_limit += len(embed.title) + len(embed.description) + len(embed.footer.text) \
                 + len(embed.author.name) + sum([len(x.name) + len(x.value) for x in embed.fields])
