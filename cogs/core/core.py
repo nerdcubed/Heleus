@@ -161,28 +161,26 @@ class Core(commands.Cog):
     @tasks.loop(seconds=15)
     async def _owner_checks(self):
         # Owner checks
-        while True:
-            app_info = await self.heleus.application_info()
-            owners = await self.settings.get('owners', [])
-            owners = list(map(int, owners))
-            if app_info.team:
-                for member in app_info.team.members:
-                    if member.membership_state == discord.TeamMembershipState.accepted and member.id not in owners:
-                        owners.append(member.id)
-            else:
-                if app_info.owner.id not in owners:
-                    owners.append(app_info.owner.id)
-                    await self.settings.set('owners', owners)
-            self.heleus.owners = owners
+        app_info = await self.heleus.application_info()
+        owners = await self.settings.get('owners', [])
+        owners = list(map(int, owners))
+        if app_info.team:
+            for member in app_info.team.members:
+                if member.membership_state == discord.TeamMembershipState.accepted and member.id not in owners:
+                    owners.append(member.id)
+        else:
+            if app_info.owner.id not in owners:
+                owners.append(app_info.owner.id)
+                await self.settings.set('owners', owners)
+        self.heleus.owners = owners
 
     @tasks.loop(seconds=1)
     async def _maintenance_loop(self):
-        while True:
-            if not self.ignore_db:
-                # Loading cogs / Unloading cogs
-                await self._cog_loop()
-                # Prefix changing
-                self.heleus.command_prefix = await self.settings.get('prefixes')
+        if not self.ignore_db:
+            # Loading cogs / Unloading cogs
+            await self._cog_loop()
+            # Prefix changing
+            self.heleus.command_prefix = await self.settings.get('prefixes')
 
     async def _ignore_overrides(self, message):
         if isinstance(message.author, discord.Member):
