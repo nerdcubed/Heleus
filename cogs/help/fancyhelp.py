@@ -164,6 +164,8 @@ class FancyHelp(commands.HelpCommand):
     async def send_bot_help(self, mapping):
         if self.template:
             embed = self.template
+            if not embed.colour:
+                embed.colour = self.get_colour()
         else:
             embed = discord.Embed(colour=self.get_colour())
             embed.title = f'❓ {self.name} Help'
