@@ -14,7 +14,6 @@ def get(file:str, schema:strictyaml.Map = None):
     if not os.path.exists(path):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), f'{folder}/{file}')
     with open(path, 'r') as f:
-        print(f)
         return strictyaml.load(f.read(), schema).data
 
 def get_safe(file:str, schema:strictyaml.Map = None):
