@@ -24,6 +24,10 @@ def permission_check(ctx, **permission_pairs):
             return True
     return False
 
+def admin_permission_check(ctx):
+    if ctx.guild.permissions_for(ctx.author).administrator:
+        return True
+    return False
 
 def is_owner():
     return commands.check(owner_check)
@@ -89,6 +93,8 @@ def mod_or_permissions(**permissions):
             return True
         if permission_check(ctx, **permissions):
             return True
+        if admin_permission_check(ctx):
+            return True
         return False
     return commands.check(predicate)
 
@@ -104,6 +110,8 @@ def admin_or_permissions(**permissions):
         if await role_check(ctx, 'admin'):
             return True
         if permission_check(ctx, **permissions):
+            return True
+        if admin_permission_check(ctx):
             return True
         return False
     return commands.check(predicate)

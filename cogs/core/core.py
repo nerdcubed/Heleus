@@ -341,7 +341,7 @@ class Core(commands.Cog):
             pass
 
     @commands.group(name='set', invoke_without_command=True)
-    @checks.admin_or_permissions()
+    @checks.admin_or_permissions(manage_guild=True)
     async def set_cmd(self, ctx):
         """Sets {}'s settings."""
         await self.heleus.send_command_help(ctx)
@@ -406,7 +406,7 @@ class Core(commands.Cog):
 
     @set_cmd.command()
     @commands.guild_only()
-    @checks.admin_or_permissions()
+    @checks.admin_or_permissions(manage_guild=True)
     @checks.is_not_selfbot()
     async def admin(self, ctx, *, role: discord.Role=None):
         """Sets {}'s admin role.
@@ -427,7 +427,7 @@ class Core(commands.Cog):
 
     @set_cmd.command()
     @commands.guild_only()
-    @checks.admin_or_permissions()
+    @checks.admin_or_permissions(manage_guild=True)
     @checks.is_not_selfbot()
     async def moderator(self, ctx, *, role: discord.Role=None):
         """Sets {}'s moderator role.
@@ -447,7 +447,7 @@ class Core(commands.Cog):
         await self._set_guild_setting(ctx.guild.id, 'roles', roles)
 
     @set_cmd.group(name='ignore', invoke_without_command=True)
-    @checks.admin_or_permissions()
+    @checks.admin_or_permissions(manage_guild=True)
     @checks.is_not_selfbot()
     @commands.guild_only()
     async def ignore_cmd(self, ctx):
@@ -455,7 +455,7 @@ class Core(commands.Cog):
         await self.heleus.send_command_help(ctx)
 
     @ignore_cmd.command()
-    @checks.admin_or_permissions()
+    @checks.admin_or_permissions(manage_guild=True)
     @checks.is_not_selfbot()
     @commands.guild_only()
     async def channel(self, ctx, state: bool):
@@ -477,7 +477,7 @@ class Core(commands.Cog):
         await self._set_guild_setting(ctx.guild.id, 'ignores', ignores)
 
     @ignore_cmd.command()
-    @checks.admin_or_permissions()
+    @checks.admin_or_permissions(manage_guild=True)
     @checks.is_not_selfbot()
     @commands.guild_only()
     async def server(self, ctx, state: bool):
