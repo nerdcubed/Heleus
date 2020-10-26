@@ -1,4 +1,4 @@
-FROM python:3.7-buster
+FROM python:3.9.0-buster
 
 RUN adduser --disabled-password --disabled-login python
 WORKDIR /app
@@ -6,7 +6,7 @@ WORKDIR /app
 COPY Pipfile Pipfile
 COPY Pipfile.lock Pipfile.lock
 
-RUN apt update && apt -y install libffi-dev python3.7-dev && \
+RUN apt update && apt -y install libffi-dev && \
     pip3 install -U pipenv uvloop && \
     pipenv install --deploy --system && \
     rm -rf /var/lib/apt/lists/*
