@@ -13,7 +13,7 @@ raven = "*"
 strictyaml = "*"
 tabulate = "*"
 psutil = "*"
-"discord.py" = {extras = ["voice"], git = "https://github.com/Rapptz/discord.py.git", ref = "0bc15fa130b8f01fe2d67446a2184d474b0d0ba7"}
+"discord.py" = {extras = ["voice"], git = "https://github.com/Rapptz/discord.py.git", ref = "abe54f5bdc48b2a92fd2a0d158ac15655049174d"}
 
 [requires]
-python_version = "3.7"
+python_version = "3.9"
