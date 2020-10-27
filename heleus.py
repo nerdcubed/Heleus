@@ -264,6 +264,8 @@ if __name__ == '__main__':
     
     load_cogs = os.environ.get('HELEUS_LOAD_COGS', None)
 
+    intents = os.environ.get('HELEUS_INTENTS', 'all')
+
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--description', type=str, help='modify the bot description shown in the help command',
@@ -278,6 +280,7 @@ if __name__ == '__main__':
     parser.add_argument('--uvloop', help='enables uvloop mode', action='store_true')
     parser.add_argument('--stateless', help='disables file storage', action='store_true')
     parser.add_argument('--cogs', help='a comma separated list of cogs to automatically load on startup', default=load_cogs)
+    parser.add_argument('--intents', help='a comma separated list of Gateway Intents to enable', default=intents)
     parser.add_argument('token', type=str, help='sets the token', default=token, nargs='?')
     shard_grp = parser.add_argument_group('sharding')
     # noinspection PyUnboundLocalVariable
@@ -364,6 +367,28 @@ if __name__ == '__main__':
         handler = logging.FileHandler(f'logs/discord_{now}.log')
         handler.setFormatter(formatter)
         discord_logger.addHandler(handler)
+    
+    if cargs.intents:
+        intents_list = cargs.intents.split(',')
+        if 'all' in intents_list:
+            intents = discord.Intents.all()
+        else:
+            if 'default' in intents_list:
+                intents = discord.Intents.default()
+                intents_list.remove('default')
+            else:
+                try:
+                    intents_list.remove('none')
+                except ValueError:
+                    pass
+                intents = discord.Intents.none()
+            for i in intents_list:
+                if not hasattr(intents, i):
+                    logger.warning(f'{i} is not a valid Gateway Intent.')
+                else:
+                    setattr(intents, i, True)
+    else:
+        intents = discord.Intents.none()
 
     def is_docker():
         path = '/proc/self/cgroup'
@@ -392,10 +417,10 @@ if __name__ == '__main__':
 
     # if we want to make an auto-reboot loop now, it would be a hell of a lot easier now
     # noinspection PyUnboundLocalVariable
-    heleus = heleus_cls('!', load_cogs=cargs.cogs, shard_id=cargs.shard_id, shard_count=cargs.shard_count,
-                      description=cargs.description, self_bot=cargs.selfbot, pm_help=None,
-                      max_messages=message_cache, redis=redis_conn, cargs=cargs, test=cargs.test,
-                      name=cargs.name)  # heleus-specific args
+    heleus = heleus_cls('!', load_cogs=cargs.cogs, intents=intents, shard_id=cargs.shard_id,
+                      shard_count=cargs.shard_count, description=cargs.description, self_bot=cargs.selfbot,
+                      pm_help=None, max_messages=message_cache, redis=redis_conn, cargs=cargs,
+                      test=cargs.test, name=cargs.name)  # heleus-specific args
 
     async def run_bot():
         await heleus.redis.ping()
