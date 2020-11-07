@@ -11,12 +11,12 @@ import sys
 import threading
 import time
 import uuid
-import discord
 from concurrent.futures import TimeoutError, ThreadPoolExecutor
 from hashlib import sha256
 
-import dill
 import aredis
+import dill
+import discord
 from discord import utils as dutils
 from discord.ext import commands
 
@@ -47,12 +47,14 @@ def create_bot(auto_shard: bool):
             self.args = kwargs.pop('cargs', None)
             self.boot_time = time.time()  # for uptime tracking, we'll use this later
             # used for keeping track of *this* instance over reboots
-            self.instance_id = sha256(f'{platform.node()}_{os.getcwd()}_{self.args.shard_id}_{self.args.shard_count}'.encode()).hexdigest()
+            self.instance_id = sha256(
+                f'{platform.node()}_{os.getcwd()}_{self.args.shard_id}_{self.args.shard_count}'.encode()).hexdigest()
             self.logger = logging.getLogger('heleus')
             self.logger.info('Heleus is booting, please wait...')
             self.settings = RedisCollection(self.redis, 'settings')
             self.owner = []  # this gets updated in on_ready
             self.invite_url = None  # this too
+            self.team = None  # and this
             self.send_cmd_help = send_cmd_help
             self.send_command_help = send_cmd_help  # seems more like a method name discord.py would choose
             self.self_bot = kwargs.get('self_bot', False)
@@ -181,7 +183,8 @@ def create_bot(auto_shard: bool):
                 return False
 
         async def on_ready(self):
-            await self.redis.set('__info__', f'This database is used by the Heleus Discord bot, logged in as user {self.user}.')
+            await self.redis.set('__info__',
+                                 f'This database is used by the Heleus Discord bot, logged in as user {self.user}.')
             self.logger.info('Heleus is connected!')
             self.logger.info(f'Logged in as {self.user}.')
             if self.shard_id is not None:
@@ -219,16 +222,16 @@ def create_bot(auto_shard: bool):
 async def send_cmd_help(ctx):
     ctx.invoked_with = 'help'
     if ctx.invoked_subcommand:
-        await ctx.send_help((ctx.invoked_subcommand))
+        await ctx.send_help(ctx.invoked_subcommand)
     else:
-        await ctx.send_help((ctx.command))
+        await ctx.send_help(ctx.command)
 
 
 if __name__ == '__main__':
     # Get defaults for argparse
     help_description = os.environ.get('HELEUS_HELP', 'Heleus, an open-source Discord bot maintained by DerpyChap, '
-                                                    'forked from Liara by Pandentia and contributors\n'
-                                                    'https://github.com/nerdcubed/Heleus')
+                                                     'forked from Liara by Pandentia and contributors\n'
+                                                     'https://github.com/nerdcubed/Heleus')
     runtime_name = os.environ.get('HELEUS_NAME', 'Heleus')
     token = os.environ.get('HELEUS_TOKEN', None)
     redis_host = os.environ.get('HELEUS_REDIS_HOST', 'localhost')
@@ -261,7 +264,7 @@ if __name__ == '__main__':
         print('Error parsing environment variable HELEUS_MESSAGE_CACHE_COUNT\n'
               'Please check that this can be converted to an integer')
         exit(4)
-    
+
     load_cogs = os.environ.get('HELEUS_LOAD_COGS', None)
 
     intents = os.environ.get('HELEUS_INTENTS', 'all')
@@ -279,7 +282,8 @@ if __name__ == '__main__':
                         default=message_cache, type=int)
     parser.add_argument('--uvloop', help='enables uvloop mode', action='store_true')
     parser.add_argument('--stateless', help='disables file storage', action='store_true')
-    parser.add_argument('--cogs', help='a comma separated list of cogs to automatically load on startup', default=load_cogs)
+    parser.add_argument('--cogs', help='a comma separated list of cogs to automatically load on startup',
+                        default=load_cogs)
     parser.add_argument('--intents', help='a comma separated list of Gateway Intents to enable', default=intents)
     parser.add_argument('token', type=str, help='sets the token', default=token, nargs='?')
     shard_grp = parser.add_argument_group('sharding')
@@ -312,6 +316,7 @@ if __name__ == '__main__':
         try:
             # noinspection PyUnresolvedReferences
             import uvloop
+
             asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
         except ImportError:
             print('uvloop is not installed!')
@@ -367,7 +372,7 @@ if __name__ == '__main__':
         handler = logging.FileHandler(f'logs/discord_{now}.log')
         handler.setFormatter(formatter)
         discord_logger.addHandler(handler)
-    
+
     if cargs.intents:
         intents_list = cargs.intents.split(',')
         if 'all' in intents_list:
@@ -390,13 +395,16 @@ if __name__ == '__main__':
     else:
         intents = discord.Intents.none()
 
+
     def is_docker():
         path = '/proc/self/cgroup'
-        return (os.path.exists('/.dockerenv') or os.path.isfile(path) and any('docker' in line for line in open(path)))
-    
+        return os.path.exists('/.dockerenv') or os.path.isfile(path) and any('docker' in line for line in open(path))
+
+
     if not is_docker():
-        logger.warning('Running outside of a Docker container, while should work with the right setup, is not officially '
-                       'supported. DO NOT expect any support if things go wrong. You\'ve been warned!')
+        logger.warning(
+            'Running outside of a Docker container, while should work with the right setup, is not officially '
+            'supported. DO NOT expect any support if things go wrong. You\'ve been warned!')
 
     if cargs.shard_id is not None:  # usability
         cargs.shard_id -= 1
@@ -418,9 +426,10 @@ if __name__ == '__main__':
     # if we want to make an auto-reboot loop now, it would be a hell of a lot easier now
     # noinspection PyUnboundLocalVariable
     heleus = heleus_cls('!', load_cogs=cargs.cogs, intents=intents, shard_id=cargs.shard_id,
-                      shard_count=cargs.shard_count, description=cargs.description, self_bot=cargs.selfbot,
-                      pm_help=None, max_messages=message_cache, redis=redis_conn, cargs=cargs,
-                      test=cargs.test, name=cargs.name)  # heleus-specific args
+                        shard_count=cargs.shard_count, description=cargs.description, self_bot=cargs.selfbot,
+                        pm_help=None, max_messages=message_cache, redis=redis_conn, cargs=cargs,
+                        test=cargs.test, name=cargs.name)  # heleus-specific args
+
 
     async def run_bot():
         await heleus.redis.ping()
@@ -450,5 +459,6 @@ if __name__ == '__main__':
         finally:
             loop.close()
             return exit_code
+
 
     exit(run_app())

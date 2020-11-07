@@ -1,9 +1,12 @@
-import discord
 import copy
-from collections import OrderedDict
-from discord.ext import commands
-from utils import checks
 import re
+from collections import OrderedDict
+
+import discord
+from discord.ext import commands
+
+from utils import checks
+
 
 class FancyHelp(commands.HelpCommand):
     def __init__(self, **options):
@@ -15,7 +18,7 @@ class FancyHelp(commands.HelpCommand):
         else:
             self.template = None
         self.regex = re.compile(r'(^.*)\n(^-+)', re.MULTILINE)
-        
+
         super().__init__(**options)
 
     HIDDEN = "🕵️‍"
@@ -34,7 +37,7 @@ class FancyHelp(commands.HelpCommand):
                 return False
         else:
             return True
-    
+
     def get_colour(self):
         if isinstance(self.context.channel, discord.abc.PrivateChannel):
             return discord.Colour.blurple()
@@ -63,22 +66,23 @@ class FancyHelp(commands.HelpCommand):
         return final_desc, topics
 
     def construct_template(self, template):
-        if not 'title' in template:
+        if 'title' not in template:
             template['title'] = f'❓ {self.name} Help'
-        if not 'color' in template:
-            template['colour'] =  None
-        if not 'description' in template:
+        if 'color' not in template:
+            template['colour'] = None
+        if 'description' not in template:
             template['description'] = self.context.bot.description
-        
+
         return discord.Embed().from_dict(template)
 
-    def get_ending_note(self, command = None):
+    def get_ending_note(self, command=None):
         if not command:
             return f'Use {self.clean_prefix}{self.invoked_with} [command] for more info on a command.'
         if isinstance(command, commands.Group):
             return (
                 f'To use a subcommand, use {self.clean_prefix}{command.qualified_name} [command].\n'
-                f'Use {self.clean_prefix}{self.invoked_with} {command.qualified_name} [command] for more info on a subcommand.'
+                f'Use {self.clean_prefix}{self.invoked_with} {command.qualified_name} [command] '
+                'for more info on a subcommand.'
             )
         else:
             return None
@@ -86,13 +90,13 @@ class FancyHelp(commands.HelpCommand):
     def get_command_signature(self, command):
         return (
             f'{self.clean_prefix}{command.qualified_name}'
-            f'{" "+ command.signature if command.signature else ""}'
-            )
-    
-    def generate_command_strs(self, commands):
+            f'{" " + command.signature if command.signature else ""}'
+        )
+
+    def generate_command_strs(self, _commands):
         max_length = 0
         is_owner = checks.owner_check(self.context)
-        for command in commands:
+        for command in _commands:
             if not command.hidden or is_owner:
                 length = len(command.name)
                 if command.hidden:
@@ -100,7 +104,7 @@ class FancyHelp(commands.HelpCommand):
                 if length > max_length:
                     max_length = length
         command_list = []
-        for command in commands:
+        for command in _commands:
             if not command.hidden or is_owner:
                 string = f'`{command.name}`'
                 if command.hidden:
@@ -116,8 +120,8 @@ class FancyHelp(commands.HelpCommand):
                     string = string[:509] + '...'
                 command_list.append(string)
         return command_list
-    
-    def format_commands(self, formatted_commands:dict, embed = None):
+
+    def format_commands(self, formatted_commands: dict, embed=None):
         embeds = []
         char_limit = 0
         if embed:
@@ -129,12 +133,12 @@ class FancyHelp(commands.HelpCommand):
         else:
             colour = self.get_colour()
             embed = discord.Embed(colour=colour)
-        
-        for field_name, commands in formatted_commands.items():
+
+        for field_name, _commands in formatted_commands.items():
             write_desc = False
             string = ''
             char_limit += len(field_name)
-            for command in commands:
+            for command in _commands:
                 # Grant a little overhead just in case
                 if char_limit + len(command) >= 5500 or len(embed.fields) == 24:
                     embeds.append(embed)
@@ -155,10 +159,10 @@ class FancyHelp(commands.HelpCommand):
                     field_name = self.BLANK
                     char_limit += 8
             embed.add_field(name=field_name, value=string, inline=False)
-        
+
         if embed not in embeds:
             embeds.append(embed)
-        
+
         return embeds
 
     async def send_bot_help(self, mapping):
@@ -173,16 +177,16 @@ class FancyHelp(commands.HelpCommand):
 
         desc_format = OrderedDict()
         if self.group_by == 'cog':
-            for cog, commands in mapping.items():
+            for cog, _commands in mapping.items():
                 name = 'No Category' if cog is None else cog.qualified_name
-                filtered = await self.filter_commands(commands, sort=True)
+                filtered = await self.filter_commands(_commands, sort=True)
                 if filtered:
                     formatted = self.generate_command_strs(filtered)
                     desc_format[name] = formatted
         else:
             groups = {}
-            for cog, commands in mapping.items():
-                filtered = await self.filter_commands(commands, sort=True)
+            for cog, _commands in mapping.items():
+                filtered = await self.filter_commands(_commands, sort=True)
                 if filtered:
                     if hasattr(cog, 'help_group'):
                         groups.setdefault(cog.help_group, []).extend(filtered)
@@ -195,11 +199,11 @@ class FancyHelp(commands.HelpCommand):
                     else:
                         groups.setdefault('No Category', []).extend(filtered)
             groups = OrderedDict(sorted(groups.items()))
-            for group, commands in groups.items():
-                commands.sort(key=lambda x: x.qualified_name)
-                formatted = self.generate_command_strs(commands)
+            for group, _commands in groups.items():
+                _commands.sort(key=lambda x: x.qualified_name)
+                formatted = self.generate_command_strs(_commands)
                 desc_format[group] = formatted
-        
+
         if desc_format:
             embeds = self.format_commands(desc_format, embed)
             embeds[-1].set_footer(text=self.get_ending_note())
@@ -220,7 +224,7 @@ class FancyHelp(commands.HelpCommand):
             if topics:
                 for topic, text in topics:
                     embed.add_field(name=topic, value=text if text else self.BLANK, inline=False)
-        
+
         filtered = await self.filter_commands(cog.get_commands(), sort=True)
         if filtered:
             formatted = self.generate_command_strs(filtered)
@@ -248,7 +252,7 @@ class FancyHelp(commands.HelpCommand):
             if hasattr(group, 'help_image'):
                 embed.set_thumbnail(url=group.help_image)
             embed.description = f'**{group.qualified_name}**'
-        
+
         embed.add_field(name='Usage', value=f'`{self.get_command_signature(group)}`', inline=False)
 
         if group.help:
@@ -272,6 +276,5 @@ class FancyHelp(commands.HelpCommand):
         else:
             embed.set_footer(text=self.get_ending_note())
             await self.get_destination().send(embed=embed)
-        
 
     send_command_help = send_group_help

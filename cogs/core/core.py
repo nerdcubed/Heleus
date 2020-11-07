@@ -1,7 +1,6 @@
 import asyncio
 import datetime
 import inspect
-import json
 import random
 import textwrap
 import time
@@ -54,8 +53,9 @@ class Core(commands.Cog):
     def __unload(self):
         self._maintenance_loop.cancel()
         self._owner_checks.cancel()
-    
-    def fetch_submodules(self, module):
+
+    @staticmethod
+    def fetch_submodules(module):
         # Somewhat hacky but OH WELL
         if module.endswith('.*'):
             module = module[:-2]
@@ -77,7 +77,7 @@ class Core(commands.Cog):
                         cogs.append(module)
                         edited = True
             self.cogs_ready = True
-        
+
         for cog in cogs:
             if cog not in list(self.heleus.extensions):
                 # noinspection PyBroadException
@@ -218,7 +218,7 @@ class Core(commands.Cog):
 
     async def reload_self(self):
         self.heleus.unload_extension('cogs.core')
-        self.load_cog('cogs.core')
+        await self.load_cog('cogs.core')
 
     # make IDEA stop acting like a baby
     # noinspection PyShadowingBuiltins
@@ -237,6 +237,7 @@ class Core(commands.Cog):
 
         self.logger.debug(f'Cog {name} loaded successfully')
 
+    # noinspection PyArgumentList
     @commands.Cog.listener()
     async def on_message(self, message):
         instance = await self.settings.get(self.heleus.instance_id, {})
@@ -288,7 +289,8 @@ class Core(commands.Cog):
                     else:
                         return  # don't care, don't log
 
-                error = f'`{type(exception).__name__}` in command `{context.command.qualified_name}`: ```py\n{self.get_traceback(exception)}\n```'
+                error = f'`{type(exception).__name__}` in command `{context.command.qualified_name}`: '\
+                        f'```py\n{self.get_traceback(exception)}\n```'
 
                 detail = {
                     'guild_id': context.guild and context.guild.id,
@@ -310,13 +312,14 @@ class Core(commands.Cog):
                         'traceback': self.get_traceback(exception)
                     }
                 }
-                self.logger.error(f'An exception occurred in the command {context.command.qualified_name}:\n{self.get_traceback(exception)}',
+                self.logger.error(f'An exception occurred in the command {context.command.qualified_name}:'
+                                  f'\n{self.get_traceback(exception)}',
                                   exc_info=detail)
                 if self.informative_errors:
                     if self.verbose_errors:
                         await context.send(error)
                     else:
-                        await context.send('An error occured while running that command.')
+                        await context.send('An error occurred while running that command.')
             if not self.informative_errors:  # everything beyond this point is purely informative
                 return
             if isinstance(exception, commands.CommandNotFound):
@@ -406,7 +409,7 @@ class Core(commands.Cog):
     @commands.guild_only()
     @checks.admin_or_permissions(manage_guild=True)
     @checks.is_not_selfbot()
-    async def admin(self, ctx, *, role: discord.Role=None):
+    async def admin(self, ctx, *, role: discord.Role = None):
         """Sets {}'s admin role.
         Roles are case sensitive.
 
@@ -427,7 +430,7 @@ class Core(commands.Cog):
     @commands.guild_only()
     @checks.admin_or_permissions(manage_guild=True)
     @checks.is_not_selfbot()
-    async def moderator(self, ctx, *, role: discord.Role=None):
+    async def moderator(self, ctx, *, role: discord.Role = None):
         """Sets {}'s moderator role.
         Roles are case sensitive.
 
@@ -516,7 +519,8 @@ class Core(commands.Cog):
                     return True
                 else:
                     return False
-            await ctx.send(f'Are you sure? I have been up since {datetime.datetime.fromtimestamp(self.heleus.boot_time)}.')
+            await ctx.send('Are you sure? I have been up since '
+                           f'{datetime.datetime.fromtimestamp(self.heleus.boot_time)}.')
             message = await self.heleus.wait_for('message', check=check)
             if message.content.lower() not in ['yes', 'yep', 'i\'m sure']:
                 return await ctx.send('Halt aborted.')
@@ -536,9 +540,10 @@ class Core(commands.Cog):
 
         try:
             await self.load_cog(name)
-            await ctx.send(f'`{name}` loaded sucessfully.')
+            await ctx.send(f'`{name}` loaded successfully.')
         except Exception as e:
-            await ctx.send(f'Unable to load; the cog caused a `{type(e).__name__}`:\n```py\n{self.get_traceback(e)}\n```')
+            await ctx.send(f'Unable to load; the cog caused a `{type(e).__name__}`:\n'
+                           f'```py\n{self.get_traceback(e)}\n```')
 
     @commands.command()
     @checks.is_owner()
@@ -575,8 +580,8 @@ class Core(commands.Cog):
             if name in list(self.heleus.extensions):
                 await msg.edit(content=f'`{name}` reloaded successfully.')
             else:
-                await msg.edit(content=f'`{name}` reloaded unsuccessfully on a non-main shard. Check your shard\'s logs for '
-                                       'more details. The cog has not been loaded on the main shard.')
+                await msg.edit(content=f'`{name}` reloaded unsuccessfully on a non-main shard. Check your shard\'s '
+                                       'logs for more details. The cog has not been loaded on the main shard.')
         else:
             await ctx.send('Unable to reload, that cog isn\'t loaded.')
 
@@ -606,7 +611,8 @@ class Core(commands.Cog):
         # let's make this safe to work with
         code = code.replace('```py\n', '').replace('```', '').replace('`', '')
 
-        _code = f'async def func(self):\n  try:\n{textwrap.indent(code, "    ")}\n  finally:\n    self._eval[\'env\'].update(locals())'
+        _code = f'async def func(self):\n  try:\n{textwrap.indent(code, "    ")}'\
+                '\n  finally:\n    self._eval[\'env\'].update(locals())'
 
         before = time.monotonic()
         # noinspection PyBroadException
