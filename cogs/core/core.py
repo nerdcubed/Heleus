@@ -184,6 +184,9 @@ class Core(commands.Cog):
 
     async def _ignore_overrides(self, message):
         if isinstance(message.author, discord.Member):
+            if not self.heleus.intents.guilds:
+                self.logger.warning('guilds intent is not available! Cannot check ignore_overrides.')
+                return
             if message.guild.owner == message.author:
                 return True
             try:
@@ -197,6 +200,10 @@ class Core(commands.Cog):
 
     async def _ignore_preconditions(self, message):
         if isinstance(message.author, discord.Member):
+            print(self.heleus.intents)
+            if not self.heleus.intents.guilds:
+                self.logger.warning('guilds intent is not available! Cannot check ignore_preconditions.')
+                return
             ignores = await self._get_guild_setting(message.guild.id, 'ignores', [])
 
             if message.author.id in ignores:
@@ -292,8 +299,13 @@ class Core(commands.Cog):
                 error = f'`{type(exception).__name__}` in command `{context.command.qualified_name}`: '\
                         f'```py\n{self.get_traceback(exception)}\n```'
 
+                if context.guild:
+                    guild_id = context.guild.id
+                else:
+                    guild_id = None
+
                 detail = {
-                    'guild_id': context.guild and context.guild.id,
+                    'guild_id': guild_id,
                     'user_id': context.author.id,
                     'channel_id': context.channel.id,
                     'command': {
@@ -486,6 +498,8 @@ class Core(commands.Cog):
 
         - state: Whether or not to ignore the current server
         """
+        if not self.heleus.intents.guilds:
+            return await self.ctx.send('Cannot ignore servers without the `guilds` intent.')
         ignores = await self._get_guild_setting(ctx.guild.id, 'ignores', [])
         guild = ctx.guild.id
 

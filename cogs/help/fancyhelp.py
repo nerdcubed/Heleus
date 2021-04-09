@@ -39,7 +39,7 @@ class FancyHelp(commands.HelpCommand):
             return True
 
     def get_colour(self):
-        if isinstance(self.context.channel, discord.abc.PrivateChannel):
+        if not self.context.guild:
             return discord.Colour.blurple()
         colour = self.context.guild.me.colour
         return colour

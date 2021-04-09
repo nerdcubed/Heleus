@@ -1,4 +1,5 @@
 import logging
+from discord import abc
 from discord.ext import commands
 
 
@@ -11,7 +12,13 @@ class CommandLog(commands.Cog):
     async def on_command(self, ctx):
         kwargs = ', '.join([f'{k}={repr(v)}' for k, v in ctx.kwargs.items()])
         args = f'with arguments {kwargs} ' if kwargs else ''
-        msg = f'{ctx.author} ({ctx.author.id}) executed command "{ctx.command}" {args}in {ctx.guild} ({ctx.guild.id})'
+        if ctx.guild:
+            msg = f'{ctx.author} ({ctx.author.id}) executed command "{ctx.command}" {args}in {ctx.guild} '\
+                  f'({ctx.guild.id})'
+        elif isinstance(ctx.channel, abc.PrivateChannel):
+            msg = f'{ctx.author} ({ctx.author.id}) executed command "{ctx.command}" {args}in DMs'
+        else:
+            msg = f'{ctx.author} ({ctx.author.id}) executed command "{ctx.command}" {args}in a guild'
         if ctx.bot.shard_id is not None:
             msg += f' on shard {ctx.bot.shard_id+1}'
         self.log.info(msg)

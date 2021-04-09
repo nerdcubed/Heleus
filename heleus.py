@@ -394,6 +394,9 @@ if __name__ == '__main__':
                     setattr(intents, i, True)
     else:
         intents = discord.Intents.none()
+    if not intents.guilds:
+        logger.warning('Running without the guilds intent is not recommend and is not officially supported. '
+                       'You have been warned!')
 
 
     def is_docker():
