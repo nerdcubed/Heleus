@@ -200,7 +200,6 @@ class Core(commands.Cog):
 
     async def _ignore_preconditions(self, message):
         if isinstance(message.author, discord.Member):
-            print(self.heleus.intents)
             if not self.heleus.intents.guilds:
                 self.logger.warning('guilds intent is not available! Cannot check ignore_preconditions.')
                 return
