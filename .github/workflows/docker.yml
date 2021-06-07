@@ -54,7 +54,7 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
-          username: ${{ steps.prepare.outputs.docker_user }}
+          username: ${{ needs.prepare.outputs.docker_user }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and Push to Registries
         uses: docker/build-push-action@v2
@@ -85,7 +85,7 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
-          username: ${{ steps.prepare.outputs.docker_user }}
+          username: ${{ needs.prepare.outputs.docker_user }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and Push to Registries
         uses: docker/build-push-action@v2
