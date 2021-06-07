@@ -26,7 +26,7 @@ jobs:
 
             echo ::set-output name=docker_user::${DOCKER_USER}
             echo ::set-output name=docker_image::${DOCKER_IMAGE}
-            echo ::set-output name=docker_hub_image::${IMAGE_NAME}
+            echo ::set-output name=docker_hub_image::${DOCKER_HUB_IMAGE}
             echo ::set-output name=version::${VERSION}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -46,9 +46,8 @@ jobs:
       - name: Build and Push to Registries
         uses: docker/build-push-action@v2
         with:
-          context: .
           platforms: linux/amd64
           push: true
           tags: |
             ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}
-            nerdcubed/heleus:${{ steps.prepare.outputs.version }}
+            ${{ steps.prepare.outputs.docker_hub_image }}:${{ steps.prepare.outputs.version }}
