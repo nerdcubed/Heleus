@@ -51,4 +51,4 @@ jobs:
           push: true
           tags: |
             ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}
-            ${{ steps.prepare.outputs.docker_hub_image }}:${{ steps.prepare.outputs.version }}
+            nerdcubed/heleus:${{ steps.prepare.outputs.version }}
