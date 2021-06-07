@@ -9,8 +9,11 @@ jobs:
       docker_image: ${{ steps.vars.outputs.docker_image }}
       docker_hub_image: ${{ steps.vars.outputs.docker_hub_image }}
       version: ${{ steps.vars.outputs.version }}
+    permissions:
+        contents: read
     if: (github.ref == 'refs/heads/main') || (contains(github.ref, 'refs/tags/') == true)
     steps:
+      - uses: actions/checkout@v2
       - name: Set Variables
         id: vars
         run: |
