@@ -6,8 +6,8 @@ WORKDIR /app
 COPY Pipfile Pipfile
 COPY Pipfile.lock Pipfile.lock
 
-RUN apt update && apt -y install libffi-dev && \
-    pip3 install -U pipenv uvloop && \
+RUN apt update && apt -y install libffi-dev python3-uvloop && \
+    pip3 install -U pipenv && \
     pipenv install --deploy --system && \
     rm -rf /var/lib/apt/lists/*
 
