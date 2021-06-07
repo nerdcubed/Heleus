@@ -5,10 +5,10 @@ jobs:
     name: Prepare
     runs-on: ubuntu-latest
     outputs:
-      - docker_user: ${{ steps.vars.outputs.docker_user }}
-        docker_image: ${{ steps.vars.outputs.docker_image }}
-        docker_hub_image: ${{ steps.vars.outputs.docker_hub_image }}
-        version: ${{ steps.vars.outputs.version }}
+      docker_user: ${{ steps.vars.outputs.docker_user }}
+      docker_image: ${{ steps.vars.outputs.docker_image }}
+      docker_hub_image: ${{ steps.vars.outputs.docker_hub_image }}
+      version: ${{ steps.vars.outputs.version }}
     if: (github.ref == 'refs/heads/main') || (contains(github.ref, 'refs/tags/') == true)
     steps:
       - name: Set Variables
