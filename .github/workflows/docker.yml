@@ -16,8 +16,8 @@ jobs:
 
             DOCKER_USER=`echo ${{ github.repository }} | cut -d "/" -f 1 | tr '[:upper:]' '[:lower:]'`
             DOCKER_REPO=`echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]'`
-            DOCKER_IMAGE=ghcr.io/$DOCKER_REPO/$IMAGE_NAME
-            DOCKER_HUB_IMAGE=$DOCKER_REPO/$IMAGE_NAME
+            DOCKER_IMAGE=ghcr.io/DOCKER_USER/$IMAGE_NAME
+            DOCKER_HUB_IMAGE=DOCKER_USER/$IMAGE_NAME
 
             VERSION=`git rev-parse --short HEAD`
             if [[ $GITHUB_REF == refs/tags/* ]]; then
@@ -26,7 +26,7 @@ jobs:
 
             echo ::set-output name=docker_user::${DOCKER_USER}
             echo ::set-output name=docker_image::${DOCKER_IMAGE}
-            echo ::set-output name=docker_hub_image::${DOCKER_HUB_IMAGE}
+            echo ::set-output name=docker_hub_image::${IMAGE_NAME}
             echo ::set-output name=version::${VERSION}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
