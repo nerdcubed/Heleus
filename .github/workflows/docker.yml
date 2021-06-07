@@ -1,48 +1,53 @@
-name: Docker Build
-on: [push, pull_request]
-
+name: Build & Push Docker image
+on: [ push ]
 jobs:
-  build:
+  push_to_registries:
+    name: Build & push Docker image to multiple registries
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
     steps:
       - uses: actions/checkout@v2
       - name: Prepare
         id: prepare
         run: |
-          IMAGE_NAME=heleus
+            IMAGE_NAME=heleus
 
-          DOCKER_USER=`echo ${{ github.repository }} | cut -d "/" -f 1 | tr '[:upper:]' '[:lower:]'`
-          DOCKER_REPO=`echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]'`
-          DOCKER_IMAGE=docker.pkg.github.com/$DOCKER_REPO/$IMAGE_NAME
+            DOCKER_USER=`echo ${{ github.repository }} | cut -d "/" -f 1 | tr '[:upper:]' '[:lower:]'`
+            DOCKER_REPO=`echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]'`
+            DOCKER_IMAGE=ghcr.io/$DOCKER_REPO/$IMAGE_NAME
+            DOCKER_HUB_IMAGE=$DOCKER_REPO/$IMAGE_NAME
 
-          VERSION=`git rev-parse --short HEAD`
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          fi
+            VERSION=`git rev-parse --short HEAD`
+            if [[ $GITHUB_REF == refs/tags/* ]]; then
+              VERSION=${GITHUB_REF#refs/tags/v}
+            fi
 
-          echo ::set-output name=docker_user::${DOCKER_USER}
-          echo ::set-output name=docker_image::${DOCKER_IMAGE}
-          echo ::set-output name=version::${VERSION}
-      - name: Setup Docker Buildx
-        uses: crazy-max/ghaction-docker-buildx@v3
-      - name: Cache Docker layers
-        uses: actions/cache@v2
+            echo ::set-output name=docker_user::${DOCKER_USER}
+            echo ::set-output name=docker_image::${DOCKER_IMAGE}
+            echo ::set-output name=docker_hub_image::${DOCKER_HUB_IMAGE}
+            echo ::set-output name=version::${VERSION}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-      - name: Build Docker Image
-        run: |
-          docker buildx build \
-            --platform linux/amd64,linux/arm64/v8 \
-            --cache-from "type=local,src=/tmp/.buildx-cache" \
-            --cache-to "type=local,dest=/tmp/.buildx-cache" \
-            --output "type=docker" \
-            --tag ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }} \
-            --file Dockerfile .
-      - name: Login to Docker Registry
-        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com --username ${{ steps.prepare.outputs.docker_user }} --password-stdin
-      - name: Push to Docker Registry
-        if: (github.ref == 'refs/heads/main') || (contains(github.ref, 'refs/tags/') == true)
-        run: docker push ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_SECRET }}
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ steps.prepare.outputs.docker_user }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and Push to Registries
+        uses: docker/build-push-action@v2
+        with:
+          platforms: linux/amd64,linux/arm64,linux/arm32
+          push: true
+          tags: |
+            ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}
+            ${{ steps.prepare.outputs.docker_hub_image }}:${{ steps.prepare.outputs.version }}
