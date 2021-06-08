@@ -1,158 +1,69 @@
-name: Build & Push Docker images
-on: [ push ]
+name: Docker Build
+on: [push, pull_request]
+
 jobs:
-  prepare:
-    name: Prepare
+  build:
     runs-on: ubuntu-latest
-    outputs:
-      docker_user: ${{ steps.vars.outputs.docker_user }}
-      docker_image: ${{ steps.vars.outputs.docker_image }}
-      docker_hub_image: ${{ steps.vars.outputs.docker_hub_image }}
-      version: ${{ steps.vars.outputs.version }}
-    permissions:
-        contents: read
-    if: (github.ref == 'refs/heads/main') || (contains(github.ref, 'refs/tags/') == true)
     steps:
-      - uses: actions/checkout@v2
-      - name: Set Variables
-        id: vars
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+            fetch-depth: 0
+      - name: Prepare
+        id: prepare
         run: |
-            IMAGE_NAME=heleus
-
-            DOCKER_USER=`echo ${{ github.repository }} | cut -d "/" -f 1 | tr '[:upper:]' '[:lower:]'`
-            DOCKER_REPO=`echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]'`
-            DOCKER_IMAGE=ghcr.io/$DOCKER_USER/$IMAGE_NAME
-            DOCKER_HUB_IMAGE=$DOCKER_USER/$IMAGE_NAME
-
-            VERSION=`git rev-parse --short HEAD`
-            if [[ $GITHUB_REF == refs/tags/* ]]; then
-              VERSION=${GITHUB_REF#refs/tags/v}
-            fi
-
-            echo ::set-output name=docker_user::${DOCKER_USER}
-            echo ::set-output name=docker_image::${DOCKER_IMAGE}
-            echo ::set-output name=docker_hub_image::${DOCKER_HUB_IMAGE}
-            echo ::set-output name=version::${VERSION}
-  build_amd64:
-    name: Build & Push AMD64
-    runs-on: ubuntu-latest
-    needs: prepare
-    permissions:
-      packages: write
-      contents: read
-    if: (github.ref == 'refs/heads/main') || (contains(github.ref, 'refs/tags/') == true)
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Docker Buildx
+          IMAGE_NAME=heleus
+          GIT_REPO='https://github.com/${{ github.repository }}'
+          DOCKER_USER=`echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]'`
+          DOCKER_IMAGE=ghcr.io/$DOCKER_USER/$IMAGE_NAME
+          DOCKER_IMAGE_HUB=$DOCKER_USER/$IMAGE_NAME
+          VERSION=`git rev-parse --short HEAD`
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          echo ::set-output name=git_repo::${GIT_REPO}
+          echo ::set-output name=docker_user::${DOCKER_USER}
+          echo ::set-output name=docker_image::${DOCKER_IMAGE}
+          echo ::set-output name=docker_image_hub::${DOCKER_IMAGE_HUB}
+          echo ::set-output name=version::${VERSION}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v1
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_SECRET }}
-      - name: Log in to GitHub Container Registry
+      - name: Login to Docker Registry
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
-          username: ${{ needs.prepare.outputs.docker_user }}
+          username: ${{ steps.prepare.outputs.docker_user }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and Push to Registries
+      - name: Build and Push
         uses: docker/build-push-action@v2
         with:
-          platforms: linux/amd64
-          push: true
+          context: .
+          push: ${{ (github.ref == 'refs/heads/main') || (contains(github.ref, 'refs/tags/') == true) }}
           tags: |
-            ${{ needs.prepare.outputs.docker_image }}:${{ needs.prepare.outputs.version }}-amd64
-            ${{ needs.prepare.outputs.docker_hub_image }}:${{ needs.prepare.outputs.version }}-amd64
-  build_arm:
-    name: Build & Push ARM
-    runs-on: [self-hosted, linux, ARM64]
-    needs: prepare
-    permissions:
-      packages: write
-      contents: read
-    if: (github.ref == 'refs/heads/main') || (contains(github.ref, 'refs/tags/') == true)
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_SECRET }}
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ needs.prepare.outputs.docker_user }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and Push ARM64 to Registries
-        uses: docker/build-push-action@v2
-        with:
-          platforms: linux/arm64
-          push: true
-          tags: |
-            ${{ needs.prepare.outputs.docker_image }}:${{ needs.prepare.outputs.version }}-aarch64
-            ${{ needs.prepare.outputs.docker_hub_image }}:${{ needs.prepare.outputs.version }}-aarch64
-      - name: Build and Push ARMv7 to Registries
-        uses: docker/build-push-action@v2
-        with:
-          platforms: linux/arm/v7
-          push: true
-          tags: |
-            ${{ needs.prepare.outputs.docker_image }}:${{ needs.prepare.outputs.version }}-armv7
-            ${{ needs.prepare.outputs.docker_hub_image }}:${{ needs.prepare.outputs.version }}-armv7
-      - name: Build and Push ARMv6 to Registries
-        uses: docker/build-push-action@v2
-        with:
-          platforms: linux/arm/v6
-          push: true
-          tags: |
-            ${{ needs.prepare.outputs.docker_image }}:${{ needs.prepare.outputs.version }}-armv6
-            ${{ needs.prepare.outputs.docker_hub_image }}:${{ needs.prepare.outputs.version }}-armv6
-  manifest:
-    name: Create and Push Manifest
-    runs-on: ubuntu-20.04
-    needs: [build_amd64, build_arm]
-    permissions:
-      packages: write
-      contents: read
-    if: (github.ref == 'refs/heads/main') || (contains(github.ref, 'refs/tags/') == true)
-    steps:
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_SECRET }}
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ needs.prepare.outputs.docker_user }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create Manifest
+            ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}
+            ${{ steps.prepare.outputs.docker_image_hub }}:${{ steps.prepare.outputs.version }}
+          build-args: GIT_REPO=${{ steps.prepare.outputs.git_repo }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+      # Temp fix
+      # https://github.com/docker/build-push-action/issues/252
+      # https://github.com/moby/buildkit/issues/1896
+      - name: Move cache
         run: |
-            GHCR=${{ needs.prepare.outputs.docker_image }}:${{ needs.prepare.outputs.version }}
-            HUB=${{ needs.prepare.outputs.docker_hub_image }}:${{ needs.prepare.outputs.version }}
-
-            AMD64={$GHCR}-amd64
-            ARM64={$GHCR}-aarch64
-            ARMV7={$GHCR}-armv7
-            ARMV6={$GHCR}-armv6
-            AMD64_HUB=${HUB}-amd64
-            ARM64_HUB=${HUB}-aarch64
-            ARMV7_HUB=${HUB}-armv7
-            ARMV6_HUB=${HUB}-armv6
-
-            docker manifest create ${GHCR} ${AMD64} ${ARM64} ${ARMV7} ${ARMV6}
-            docker manifest annotate ${GHCR} ${ARM64} --os linux --arch arm64
-            docker manifest annotate ${GHCR} ${ARMV7} --os linux --arch arm --variant v7
-            docker manifest annotate ${GHCR} ${ARMV6} --os linux --arch arm --variant v6
-            docker manifest push ${GHCR}
-
-            docker manifest create ${HUB} ${AMD64_HUB} ${ARM64_HUB} ${ARMV7_HUB} ${ARMV6_HUB}
-            docker manifest annotate ${HUB} ${ARM64_HUB} --os linux --arch arm64
-            docker manifest annotate ${HUB} ${ARMV7_HUB} --os linux --arch arm --variant v7
-            docker manifest annotate ${HUB} ${ARMV6_HUB} --os linux --arch arm --variant v6
-            docker manifest push ${HUB}
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
