@@ -33,8 +33,8 @@ jobs:
             echo ::set-output name=docker_image::${DOCKER_IMAGE}
             echo ::set-output name=docker_hub_image::${DOCKER_HUB_IMAGE}
             echo ::set-output name=version::${VERSION}
-  build_x86:
-    name: Build & Push x86_64
+  build_amd64:
+    name: Build & Push AMD64
     runs-on: ubuntu-latest
     needs: prepare
     permissions:
@@ -62,8 +62,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ needs.prepare.outputs.docker_image }}:${{ needs.prepare.outputs.version }}
-            ${{ needs.prepare.outputs.docker_hub_image }}:${{ needs.prepare.outputs.version }}
+            ${{ needs.prepare.outputs.docker_image }}:${{ needs.prepare.outputs.version }}-amd64
+            ${{ needs.prepare.outputs.docker_hub_image }}:${{ needs.prepare.outputs.version }}-amd64
   build_arm:
     name: Build & Push ARM
     runs-on: [self-hosted, linux, ARM64]
@@ -87,11 +87,72 @@ jobs:
           registry: ghcr.io
           username: ${{ needs.prepare.outputs.docker_user }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and Push to Registries
+      - name: Build and Push ARM64 to Registries
         uses: docker/build-push-action@v2
         with:
-          platforms: linux/arm64,linux/arm/v7,linux/arm/v6
+          platforms: linux/arm64
           push: true
           tags: |
-            ${{ needs.prepare.outputs.docker_image }}:${{ needs.prepare.outputs.version }}
-            ${{ needs.prepare.outputs.docker_hub_image }}:${{ needs.prepare.outputs.version }}
+            ${{ needs.prepare.outputs.docker_image }}:${{ needs.prepare.outputs.version }}-aarch64
+            ${{ needs.prepare.outputs.docker_hub_image }}:${{ needs.prepare.outputs.version }}-aarch64
+      - name: Build and Push ARMv7 to Registries
+        uses: docker/build-push-action@v2
+        with:
+          platforms: linux/arm/v7
+          push: true
+          tags: |
+            ${{ needs.prepare.outputs.docker_image }}:${{ needs.prepare.outputs.version }}-armv7
+            ${{ needs.prepare.outputs.docker_hub_image }}:${{ needs.prepare.outputs.version }}-armv7
+      - name: Build and Push ARMv6 to Registries
+        uses: docker/build-push-action@v2
+        with:
+          platforms: linux/arm/v6
+          push: true
+          tags: |
+            ${{ needs.prepare.outputs.docker_image }}:${{ needs.prepare.outputs.version }}-armv6
+            ${{ needs.prepare.outputs.docker_hub_image }}:${{ needs.prepare.outputs.version }}-armv6
+  manifest:
+    name: Create and Push Manifest
+    runs-on: ubuntu-20.04
+    needs: [build_amd64, build_arm]
+    permissions:
+      packages: write
+      contents: read
+    if: (github.ref == 'refs/heads/main') || (contains(github.ref, 'refs/tags/') == true)
+    steps:
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_SECRET }}
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ needs.prepare.outputs.docker_user }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Manifest
+        run: |
+            GHCR=${{ needs.prepare.outputs.docker_image }}:${{ needs.prepare.outputs.version }}
+            HUB=${{ needs.prepare.outputs.docker_hub_image }}:${{ needs.prepare.outputs.version }}
+
+            AMD64={$GHCR}-amd64
+            ARM64={$GHCR}-aarch64
+            ARMV7={$GHCR}-armv7
+            ARMV6={$GHCR}-armv6
+            AMD64_HUB=${HUB}-amd64
+            ARM64_HUB=${HUB}-aarch64
+            ARMV7_HUB=${HUB}-armv7
+            ARMV6_HUB=${HUB}-armv6
+
+            docker manifest create ${GHCR} ${AMD64} ${ARM64} ${ARMV7} ${ARMV6}
+            docker manifest annotate ${GHCR} ${ARM64} --os linux --arch arm64
+            docker manifest annotate ${GHCR} ${ARMV7} --os linux --arch arm --variant v7
+            docker manifest annotate ${GHCR} ${ARMV6} --os linux --arch arm --variant v6
+            docker manifest push ${GHCR}
+
+            docker manifest create ${HUB} ${AMD64_HUB} ${ARM64_HUB} ${ARMV7_HUB} ${ARMV6_HUB}
+            docker manifest annotate ${HUB} ${ARM64_HUB} --os linux --arch arm64
+            docker manifest annotate ${HUB} ${ARMV7_HUB} --os linux --arch arm --variant v7
+            docker manifest annotate ${HUB} ${ARMV6_HUB} --os linux --arch arm --variant v6
+            docker manifest push ${HUB}
