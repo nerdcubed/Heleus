@@ -1,4 +1,4 @@
-FROM python:3.9.0-buster
+FROM python:3.10.2-buster
 
 RUN adduser --disabled-password --disabled-login --gecos '' python
 WORKDIR /app
