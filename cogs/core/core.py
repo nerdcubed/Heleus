@@ -118,10 +118,10 @@ class Core(commands.Cog):
         """Power-on self test. Beep boop."""
         self.heleus.owners = []
 
-        # set prefixes
+        # set prefix
         self.heleus.command_prefix = commands.when_mentioned
         self.logger.info(
-            f'Run legacy commands by mentioning @{self.heleus.name}'
+            f'Run legacy commands by mentioning {self.heleus.name}'
         )
 
         # Load cogs
@@ -195,8 +195,6 @@ class Core(commands.Cog):
         if not self.ignore_db:
             # Loading cogs / Unloading cogs
             await self._cog_loop()
-            # Prefix changing
-            self.heleus.command_prefix = await self.settings.get('prefixes')
 
     async def _ignore_overrides(self, message):
         if isinstance(message.author, discord.Member):
@@ -442,7 +440,6 @@ class Core(commands.Cog):
     # noinspection PyTypeChecker
     @set_cmd.command()
     @checks.is_owner()
-    @checks.is_not_selfbot()
     async def owner(self, ctx, *owners: discord.Member):
         """Sets {}'s owners.
 
@@ -457,7 +454,6 @@ class Core(commands.Cog):
     @set_cmd.command()
     @commands.guild_only()
     @checks.admin_or_permissions(manage_guild=True)
-    @checks.is_not_selfbot()
     async def admin(self, ctx, *, role: discord.Role = None):
         """Sets {}'s admin role.
         Roles are case sensitive.
@@ -480,7 +476,6 @@ class Core(commands.Cog):
     @set_cmd.command()
     @commands.guild_only()
     @checks.admin_or_permissions(manage_guild=True)
-    @checks.is_not_selfbot()
     async def moderator(self, ctx, *, role: discord.Role = None):
         """Sets {}'s moderator role.
         Roles are case sensitive.
@@ -502,7 +497,6 @@ class Core(commands.Cog):
 
     @set_cmd.group(name='ignore', invoke_without_command=True)
     @checks.admin_or_permissions(manage_guild=True)
-    @checks.is_not_selfbot()
     @commands.guild_only()
     async def ignore_cmd(self, ctx):
         """Helps you ignore/unignore servers/channels."""
@@ -510,7 +504,6 @@ class Core(commands.Cog):
 
     @ignore_cmd.command()
     @checks.admin_or_permissions(manage_guild=True)
-    @checks.is_not_selfbot()
     @commands.guild_only()
     async def channel(self, ctx, state: bool):
         """Ignores/unignores the current channel.
@@ -532,7 +525,6 @@ class Core(commands.Cog):
 
     @ignore_cmd.command()
     @checks.admin_or_permissions(manage_guild=True)
-    @checks.is_not_selfbot()
     @commands.guild_only()
     async def server(self, ctx, state: bool):
         """Ignores/unignores the current server.

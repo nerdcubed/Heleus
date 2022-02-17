@@ -55,7 +55,6 @@ def create_bot(auto_shard: bool):
             self.logger = logging.getLogger('heleus')
             self.logger.info('Heleus is booting, please wait...')
             self.settings = RedisCollection(self.redis, 'settings')
-            self.owner = []  # this gets updated in on_ready
             self.invite_url = None  # this too
             self.team = None  # and this
             self.send_cmd_help = send_cmd_help
@@ -241,15 +240,6 @@ def create_bot(auto_shard: bool):
             self.invite_url = dutils.oauth_url(app_info.id)
             self.logger.info(f'Invite URL: {self.invite_url}')
             self.team = app_info.team
-            if self.team:
-                for member in self.team.members:
-                    if (
-                        member.membership_state
-                        == discord.TeamMembershipState.accepted
-                    ):
-                        self.owner.append(member)
-            else:
-                self.owner = [app_info.owner]
             if self.test:
                 self.logger.info('Test complete, logging out...')
                 await self.close()
@@ -550,8 +540,9 @@ if __name__ == '__main__':
 
     # noinspection PyBroadException
     def run_app():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        # TODO: This is depreciated but the alternative causes
+        # wait_until_ready() to block indefinitely so idk what to do lol
+        loop = asyncio.get_event_loop()
 
         exit_code = 0
         try:
