@@ -1,6 +1,6 @@
-import discord
+import disnake as discord
 import os
-from discord.ext import commands
+from disnake.ext import commands
 from utils import checks, yaml
 from .fancyhelp import FancyHelp
 

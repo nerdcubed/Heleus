@@ -1,6 +1,6 @@
 import logging
-from discord import abc
-from discord.ext import commands
+from disnake import abc
+from disnake.ext import commands
 
 
 class CommandLog(commands.Cog):

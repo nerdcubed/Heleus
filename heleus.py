@@ -16,9 +16,9 @@ from hashlib import sha256
 
 import aredis
 import dill
-import discord
-from discord import utils as dutils
-from discord.ext import commands
+import disnake as discord
+from disnake import utils as dutils
+from disnake.ext import commands
 
 from utils.storage import RedisCollection
 

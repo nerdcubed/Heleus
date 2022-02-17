@@ -1,8 +1,8 @@
 import asyncio
 import typing
 
-import discord
-from discord.ext.commands import Context
+import disnake as discord
+from disnake.ext.commands import Context
 
 
 class Paginator:

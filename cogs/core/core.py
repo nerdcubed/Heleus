@@ -9,8 +9,8 @@ import os
 import pkgutil
 
 import aiohttp
-import discord
-from discord.ext import commands, tasks
+import disnake as discord
+from disnake.ext import commands, tasks
 
 from utils import checks
 from utils.runtime import CoreMode

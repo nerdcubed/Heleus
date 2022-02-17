@@ -2,8 +2,8 @@ import copy
 import re
 from collections import OrderedDict
 
-import discord
-from discord.ext import commands
+import disnake as discord
+from disnake.ext import commands
 
 from utils import checks
 
