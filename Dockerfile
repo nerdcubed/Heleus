@@ -7,8 +7,9 @@ COPY Pipfile Pipfile
 COPY Pipfile.lock Pipfile.lock
 
 RUN apt update && apt -y install libffi-dev && \
-    pip3 install -U pipenv uvloop && \
-    pipenv install --deploy --system && \
+    pip3 install -U poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install && \
     rm -rf /var/lib/apt/lists/*
 
 RUN chown -R python:python /app
