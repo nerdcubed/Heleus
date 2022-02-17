@@ -8,13 +8,13 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.10"
 uvloop = "^0.16.0"
-aredis = "^1.1.8"
 dill = "^0.3.4"
 raven = "^6.10.0"
 strictyaml = "^1.6.1"
 tabulate = "^0.8.9"
 psutil = "^5.9.0"
 disnake = {extras = ["voice"], version = "^2.4.0"}
+coredis = {extras = ["hiredis"], version = "^2.3.1"}
 
 [tool.poetry.dev-dependencies]
 

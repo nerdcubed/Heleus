@@ -119,14 +119,9 @@ class Core(commands.Cog):
         self.heleus.owners = []
 
         # set prefixes
-        prefix = str(random.randint(1, 2 ** 8))
-        prefixes = await self.settings.get('prefixes')
-        if prefixes is None:
-            prefixes = [prefix]
-            await self.settings.set('prefixes', prefixes)
-        self.heleus.command_prefix = prefixes
+        self.heleus.command_prefix = commands.when_mentioned
         self.logger.info(
-            f'{self.heleus.name}\'s prefixes are: {", ".join(map(repr, prefixes))}'
+            f'Run legacy commands by mentioning @{self.heleus.name}'
         )
 
         # Load cogs
@@ -413,21 +408,6 @@ class Core(commands.Cog):
     async def set_cmd(self, ctx):
         """Sets {}'s settings."""
         await self.heleus.send_command_help(ctx)
-
-    @set_cmd.command()
-    @checks.is_owner()
-    async def prefix(self, ctx, *prefixes: str):
-        """Sets {}'s prefixes.
-
-        - prefixes: A list of prefixes to use
-        """
-        if not prefixes:
-            await self.heleus.send_command_help(ctx)
-            return
-
-        self.heleus.command_prefix = prefixes
-        await self.settings.set('prefixes', prefixes)
-        await ctx.send('Prefix(es) set.')
 
     @set_cmd.command()
     @checks.is_owner()

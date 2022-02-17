@@ -14,7 +14,7 @@ import uuid
 from concurrent.futures import TimeoutError, ThreadPoolExecutor
 from hashlib import sha256
 
-import aredis
+import coredis
 import dill
 import disnake as discord
 from disnake import utils as dutils
@@ -342,15 +342,6 @@ if __name__ == '__main__':
         help='allows for white labeling Heleus',
         default=runtime_name,
     )
-    parser.add_argument(
-        '--selfbot', help='enables selfbot mode', action='store_true'
-    )
-    parser.add_argument(
-        '--userbot',
-        help='enables userbot mode, with the specified owner ID',
-        type=int,
-        default=None,
-    )
     parser.add_argument('--debug', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--test', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument(
@@ -411,14 +402,6 @@ if __name__ == '__main__':
     cargs = parser.parse_args()
 
     if cargs.token is None:
-        exit(parser.print_usage())
-
-    if cargs.userbot is None:
-        userbot = False
-    else:
-        userbot = True
-
-    if cargs.selfbot and userbot:
         exit(parser.print_usage())
 
     if cargs.uvloop:
@@ -532,7 +515,7 @@ if __name__ == '__main__':
         cargs.shard_id -= 1
 
     # Redis connection attempt
-    redis_conn = aredis.StrictRedis(
+    redis_conn = coredis.StrictRedis(
         host=cargs.host, port=cargs.port, db=cargs.db, password=cargs.password
     )
 
@@ -540,17 +523,12 @@ if __name__ == '__main__':
     unsharded = True
     if cargs.shard_id is not None:
         unsharded = False
-    if cargs.userbot:
-        unsharded = False
-    if cargs.selfbot:
-        unsharded = False
 
     heleus_cls = create_bot(unsharded)
 
     # if we want to make an auto-reboot loop now, it would be a hell of a lot easier now
     # noinspection PyUnboundLocalVariable
     heleus = heleus_cls(
-        '!',
         load_cogs=cargs.cogs,
         intents=intents,
         shard_id=cargs.shard_id,
@@ -567,12 +545,14 @@ if __name__ == '__main__':
     async def run_bot():
         await heleus.redis.ping()
         await heleus.init()
-        await heleus.login(cargs.token, bot=not (cargs.selfbot or userbot))
+        await heleus.login(cargs.token)
         await heleus.connect()
 
     # noinspection PyBroadException
     def run_app():
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
         exit_code = 0
         try:
             loop.run_until_complete(run_bot())
@@ -581,7 +561,7 @@ if __name__ == '__main__':
                 'Shutting down threads and quitting. Thank you for using Heleus.'
             )
             loop.run_until_complete(heleus.close())
-        except aredis.ConnectionError:
+        except coredis.ConnectionError:
             exit_code = 2
             logger.critical('Unable to connect to Redis.')
         except discord.LoginFailure:
