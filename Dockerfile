@@ -3,8 +3,8 @@ FROM python:3.10.2-buster
 RUN adduser --disabled-password --disabled-login --gecos '' python
 WORKDIR /app
 
-COPY Pipfile Pipfile
-COPY Pipfile.lock Pipfile.lock
+COPY pyproject.toml pyproject.toml
+COPY poetry.lock poetry.lock
 
 RUN apt update && apt -y install libffi-dev && \
     pip3 install -U poetry && \
