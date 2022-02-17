@@ -32,10 +32,16 @@ class Core(commands.Cog):
         self.settings = RedisCollection(self.heleus.redis, 'settings')
         self.logger = self.heleus.logger
         self._post.start()
-        self.global_preconditions = [self._ignore_preconditions]  # preconditions to message processing
-        self.global_preconditions_overrides = [self._ignore_overrides]  # overrides to the preconditions
+        self.global_preconditions = [
+            self._ignore_preconditions
+        ]  # preconditions to message processing
+        self.global_preconditions_overrides = [
+            self._ignore_overrides
+        ]  # overrides to the preconditions
         self._eval = {}
-        self.haste_url = os.environ.get('HELEUS_HASTE_URL', 'https://hastebin.com')
+        self.haste_url = os.environ.get(
+            'HELEUS_HASTE_URL', 'https://hastebin.com'
+        )
         self.cogs_ready = False
         self.help_group = 'Core'
         self.help_image = 'https://i.imgur.com/jLP1NEW.png'
@@ -86,7 +92,9 @@ class Core(commands.Cog):
                 except Exception:
                     cogs.remove(cog)
                     edited = True
-                    self.logger.warning(f'{repr(cog)} could not be loaded. This message will not be shown again.')
+                    self.logger.warning(
+                        f'{repr(cog)} could not be loaded. This message will not be shown again.'
+                    )
         if edited:
             await self.settings.set('cogs', cogs)
 
@@ -111,19 +119,23 @@ class Core(commands.Cog):
         self.heleus.owners = []
 
         # set prefixes
-        prefix = str(random.randint(1, 2**8))
+        prefix = str(random.randint(1, 2 ** 8))
         prefixes = await self.settings.get('prefixes')
         if prefixes is None:
             prefixes = [prefix]
             await self.settings.set('prefixes', prefixes)
         self.heleus.command_prefix = prefixes
-        self.logger.info(f'{self.heleus.name}\'s prefixes are: {", ".join(map(repr, prefixes))}')
+        self.logger.info(
+            f'{self.heleus.name}\'s prefixes are: {", ".join(map(repr, prefixes))}'
+        )
 
         # Load cogs
         await self._cog_loop()
 
         # Mess with the instance's mode
-        instance = await self.settings.get(self.heleus.instance_id, {'mode': CoreMode.boot})
+        instance = await self.settings.get(
+            self.heleus.instance_id, {'mode': CoreMode.boot}
+        )
         if not self.heleus.ready:
             if instance['mode'] == CoreMode.up:
                 instance['mode'] = CoreMode.boot
@@ -141,14 +153,19 @@ class Core(commands.Cog):
             roles = await self.settings.get('roles')
             for guild in roles:
                 await self._set_guild_setting(
-                    int(guild), 'roles', {k.rstrip('_role'): v for k, v in roles[guild].items()}
+                    int(guild),
+                    'roles',
+                    {k.rstrip('_role'): v for k, v in roles[guild].items()},
                 )
             await self.settings.delete('roles')
         if 'ignores' in keys:
             ignores = await self.settings.get('ignores')
             for guild in ignores:
                 entry = []
-                [entry.append(int(x)) for x in ignores[guild]['ignored_channels']]
+                [
+                    entry.append(int(x))
+                    for x in ignores[guild]['ignored_channels']
+                ]
                 if ignores[guild]['server_ignore']:
                     entry.append(int(guild))
                 await self._set_guild_setting(int(guild), 'ignores', entry)
@@ -166,7 +183,11 @@ class Core(commands.Cog):
         owners = list(map(int, owners))
         if app_info.team:
             for member in app_info.team.members:
-                if member.membership_state == discord.TeamMembershipState.accepted and member.id not in owners:
+                if (
+                    member.membership_state
+                    == discord.TeamMembershipState.accepted
+                    and member.id not in owners
+                ):
                     owners.append(member.id)
         else:
             if app_info.owner.id not in owners:
@@ -185,13 +206,17 @@ class Core(commands.Cog):
     async def _ignore_overrides(self, message):
         if isinstance(message.author, discord.Member):
             if not self.heleus.intents.guilds:
-                self.logger.warning('guilds intent is not available! Cannot check ignore_overrides.')
+                self.logger.warning(
+                    'guilds intent is not available! Cannot check ignore_overrides.'
+                )
                 return
             if message.guild.owner == message.author:
                 return True
             try:
                 roles = {x.name.lower() for x in message.author.roles}
-                settings = await self._get_guild_setting(message.guild.id, 'roles', {})
+                settings = await self._get_guild_setting(
+                    message.guild.id, 'roles', {}
+                )
                 admin = settings.get('admin')
                 if admin in roles:
                     return True
@@ -201,9 +226,13 @@ class Core(commands.Cog):
     async def _ignore_preconditions(self, message):
         if isinstance(message.author, discord.Member):
             if not self.heleus.intents.guilds:
-                self.logger.warning('guilds intent is not available! Cannot check ignore_preconditions.')
+                self.logger.warning(
+                    'guilds intent is not available! Cannot check ignore_preconditions.'
+                )
                 return
-            ignores = await self._get_guild_setting(message.guild.id, 'ignores', [])
+            ignores = await self._get_guild_setting(
+                message.guild.id, 'ignores', []
+            )
 
             if message.author.id in ignores:
                 return False
@@ -214,13 +243,22 @@ class Core(commands.Cog):
 
     async def create_haste(self, content):
         async with aiohttp.ClientSession() as session:
-            async with session.post(f'{self.haste_url}/documents', data=content) as response:
+            async with session.post(
+                f'{self.haste_url}/documents', data=content
+            ) as response:
                 return await response.json()
 
     @staticmethod
     def get_traceback(exception, limit=None, chain=True):
-        return ''.join(traceback.format_exception(type(exception), exception, exception.__traceback__, limit=limit,
-                                                  chain=chain))
+        return ''.join(
+            traceback.format_exception(
+                type(exception),
+                exception,
+                exception.__traceback__,
+                limit=limit,
+                chain=chain,
+            )
+        )
 
     async def reload_self(self):
         self.heleus.unload_extension('cogs.core')
@@ -250,7 +288,9 @@ class Core(commands.Cog):
         mode = instance.get('mode', CoreMode.down)
         if mode in (CoreMode.down, CoreMode.boot):
             return
-        if message.author.id in self.heleus.owners:  # *always* process owner commands
+        if (
+            message.author.id in self.heleus.owners
+        ):  # *always* process owner commands
             await self.heleus.process_commands(message)
             return
         if mode == CoreMode.maintenance:
@@ -266,7 +306,9 @@ class Core(commands.Cog):
                     await self.heleus.process_commands(message)
                     return
             except Exception:
-                self.logger.exception(f'Removed precondition override "{override.__name__}", it was malfunctioning.')
+                self.logger.exception(
+                    f'Removed precondition override "{override.__name__}", it was malfunctioning.'
+                )
                 self.global_preconditions_overrides.remove(override)
         # Preconditions
         for precondition in self.global_preconditions:
@@ -278,7 +320,9 @@ class Core(commands.Cog):
                 if out is False:
                     return
             except Exception:
-                self.logger.exception(f'Removed precondition "{precondition.__name__}", it was malfunctioning.')
+                self.logger.exception(
+                    f'Removed precondition "{precondition.__name__}", it was malfunctioning.'
+                )
                 self.global_preconditions.remove(precondition)
 
         await self.heleus.process_commands(message)
@@ -291,12 +335,16 @@ class Core(commands.Cog):
 
                 if isinstance(exception, discord.Forbidden):
                     if self.informative_errors:
-                        return await context.send('I don\'t have permission to perform the action you requested.')
+                        return await context.send(
+                            "I don't have permission to perform the action you requested."
+                        )
                     else:
                         return  # don't care, don't log
 
-                error = f'`{type(exception).__name__}` in command `{context.command.qualified_name}`: '\
-                        f'```py\n{self.get_traceback(exception)}\n```'
+                error = (
+                    f'`{type(exception).__name__}` in command `{context.command.qualified_name}`: '
+                    f'```py\n{self.get_traceback(exception)}\n```'
+                )
 
                 if context.guild:
                     guild_id = context.guild.id
@@ -312,26 +360,32 @@ class Core(commands.Cog):
                         'qualified_name': context.command.qualified_name,
                         'hidden': context.command.hidden,
                         'description': context.command.description,
-                        'aliases': context.command.aliases
+                        'aliases': context.command.aliases,
                     },
                     'message': {
                         'id': context.message.id,
-                        'content': context.message.clean_content
+                        'content': context.message.clean_content,
                     },
                     'exception': {
                         'type': type(exception).__name__,
-                        'traceback': self.get_traceback(exception)
-                    }
+                        'traceback': self.get_traceback(exception),
+                    },
                 }
-                self.logger.error(f'An exception occurred in the command {context.command.qualified_name}:'
-                                  f'\n{self.get_traceback(exception)}',
-                                  exc_info=detail)
+                self.logger.error(
+                    f'An exception occurred in the command {context.command.qualified_name}:'
+                    f'\n{self.get_traceback(exception)}',
+                    exc_info=detail,
+                )
                 if self.informative_errors:
                     if self.verbose_errors:
                         await context.send(error)
                     else:
-                        await context.send('An error occurred while running that command.')
-            if not self.informative_errors:  # everything beyond this point is purely informative
+                        await context.send(
+                            'An error occurred while running that command.'
+                        )
+            if (
+                not self.informative_errors
+            ):  # everything beyond this point is purely informative
                 return
             if isinstance(exception, commands.CommandNotFound):
                 return  # be nice to other bots
@@ -342,7 +396,9 @@ class Core(commands.Cog):
                 await self.heleus.send_command_help(context)
             if isinstance(exception, commands.NoPrivateMessage):
                 # returning to avoid CheckFailure
-                return await context.send('That command is not available in direct messages.')
+                return await context.send(
+                    'That command is not available in direct messages.'
+                )
             if isinstance(exception, commands.CommandOnCooldown):
                 await context.send('That command is cooling down.')
             if isinstance(exception, commands.CheckFailure):
@@ -381,7 +437,9 @@ class Core(commands.Cog):
         - username: The username to use
         """
         await self.heleus.user.edit(username=username)
-        await ctx.send(f'Username changed. Please call me {username} from now on.')
+        await ctx.send(
+            f'Username changed. Please call me {username} from now on.'
+        )
 
     @set_cmd.command()
     @checks.is_owner()
@@ -433,8 +491,10 @@ class Core(commands.Cog):
         else:
             if 'admin' in roles:
                 roles.pop('admin')
-            await ctx.send('Admin role cleared.\n'
-                           f'If you didn\'t intend to do this, use `{ctx.prefix}help set admin` for help.')
+            await ctx.send(
+                'Admin role cleared.\n'
+                f"If you didn't intend to do this, use `{ctx.prefix}help set admin` for help."
+            )
         await self._set_guild_setting(ctx.guild.id, 'roles', roles)
 
     @set_cmd.command()
@@ -454,8 +514,10 @@ class Core(commands.Cog):
         else:
             if 'mod' in roles:
                 roles.pop('mod')
-            await ctx.send('Moderator role cleared.\n'
-                           f'If you didn\'t intend to do this, use `{ctx.prefix}help set moderator` for help.')
+            await ctx.send(
+                'Moderator role cleared.\n'
+                f"If you didn't intend to do this, use `{ctx.prefix}help set moderator` for help."
+            )
         await self._set_guild_setting(ctx.guild.id, 'roles', roles)
 
     @set_cmd.group(name='ignore', invoke_without_command=True)
@@ -498,7 +560,9 @@ class Core(commands.Cog):
         - state: Whether or not to ignore the current server
         """
         if not self.heleus.intents.guilds:
-            return await self.ctx.send('Cannot ignore servers without the `guilds` intent.')
+            return await self.ctx.send(
+                'Cannot ignore servers without the `guilds` intent.'
+            )
         ignores = await self._get_guild_setting(ctx.guild.id, 'ignores', [])
         guild = ctx.guild.id
 
@@ -527,15 +591,23 @@ class Core(commands.Cog):
         - skip_confirm: Whether or not to skip halt confirmation.
         """
         if not skip_confirm:
+
             def check(_msg):
-                if _msg.author == ctx.message.author and _msg.channel == ctx.message.channel and _msg.content:
+                if (
+                    _msg.author == ctx.message.author
+                    and _msg.channel == ctx.message.channel
+                    and _msg.content
+                ):
                     return True
                 else:
                     return False
-            await ctx.send('Are you sure? I have been up since '
-                           f'{datetime.datetime.fromtimestamp(self.heleus.boot_time)}.')
+
+            await ctx.send(
+                'Are you sure? I have been up since '
+                f'{datetime.datetime.fromtimestamp(self.heleus.boot_time)}.'
+            )
             message = await self.heleus.wait_for('message', check=check)
-            if message.content.lower() not in ['yes', 'yep', 'i\'m sure']:
+            if message.content.lower() not in ['yes', 'yep', "i'm sure"]:
                 return await ctx.send('Halt aborted.')
         await ctx.send('\N{WAVING HAND SIGN}')
         await self.halt_()
@@ -555,8 +627,10 @@ class Core(commands.Cog):
             await self.load_cog(name)
             await ctx.send(f'`{name}` loaded successfully.')
         except Exception as e:
-            await ctx.send(f'Unable to load; the cog caused a `{type(e).__name__}`:\n'
-                           f'```py\n{self.get_traceback(e)}\n```')
+            await ctx.send(
+                f'Unable to load; the cog caused a `{type(e).__name__}`:\n'
+                f'```py\n{self.get_traceback(e)}\n```'
+            )
 
     @commands.command()
     @checks.is_owner()
@@ -566,8 +640,10 @@ class Core(commands.Cog):
         - name: The name of the cog to unload
         """
         if name == 'core':
-            await ctx.send('Sorry, I can\'t let you do that. '
-                           'If you want to install a custom loader, look into the documentation.')
+            await ctx.send(
+                "Sorry, I can't let you do that. "
+                'If you want to install a custom loader, look into the documentation.'
+            )
             return
         if name in list(self.heleus.extensions):
             self.heleus.unload_extension(name)
@@ -576,15 +652,19 @@ class Core(commands.Cog):
             await self.settings.set('cogs', cogs)
             await ctx.send(f'`{name}` unloaded successfully.')
         else:
-            await ctx.send('Unable to unload; that cog isn\'t loaded.')
+            await ctx.send("Unable to unload; that cog isn't loaded.")
 
     @commands.command()
     @checks.is_owner()
     async def reload(self, ctx, name: str):
         """Reloads a cog."""
         if name == 'core':
-            await self.heleus.run_on_shard(None if self.heleus.shard_id is None else 'all', reload_core)
-            await ctx.send('Command dispatched, reloading core on all shards now.')
+            await self.heleus.run_on_shard(
+                None if self.heleus.shard_id is None else 'all', reload_core
+            )
+            await ctx.send(
+                'Command dispatched, reloading core on all shards now.'
+            )
             return
         if name in list(self.heleus.extensions):
             msg = await ctx.send(f'`{name}` reloading...')
@@ -593,10 +673,12 @@ class Core(commands.Cog):
             if name in list(self.heleus.extensions):
                 await msg.edit(content=f'`{name}` reloaded successfully.')
             else:
-                await msg.edit(content=f'`{name}` reloaded unsuccessfully on a non-main shard. Check your shard\'s '
-                                       'logs for more details. The cog has not been loaded on the main shard.')
+                await msg.edit(
+                    content=f"`{name}` reloaded unsuccessfully on a non-main shard. Check your shard's "
+                    'logs for more details. The cog has not been loaded on the main shard.'
+                )
         else:
-            await ctx.send('Unable to reload, that cog isn\'t loaded.')
+            await ctx.send("Unable to reload, that cog isn't loaded.")
 
     @commands.command(hidden=True, aliases=['debug'])
     @checks.is_owner()
@@ -610,22 +692,26 @@ class Core(commands.Cog):
         if self._eval.get('count') is None:
             self._eval['count'] = 0
 
-        self._eval['env'].update({
-            'bot': self.heleus,
-            'client': self.heleus,
-            'heleus': self.heleus,
-            'ctx': ctx,
-            'message': ctx.message,
-            'channel': ctx.message.channel,
-            'guild': ctx.message.guild,
-            'author': ctx.message.author,
-        })
+        self._eval['env'].update(
+            {
+                'bot': self.heleus,
+                'client': self.heleus,
+                'heleus': self.heleus,
+                'ctx': ctx,
+                'message': ctx.message,
+                'channel': ctx.message.channel,
+                'guild': ctx.message.guild,
+                'author': ctx.message.author,
+            }
+        )
 
         # let's make this safe to work with
         code = code.replace('```py\n', '').replace('```', '').replace('`', '')
 
-        _code = f'async def func(self):\n  try:\n{textwrap.indent(code, "    ")}'\
-                '\n  finally:\n    self._eval[\'env\'].update(locals())'
+        _code = (
+            f'async def func(self):\n  try:\n{textwrap.indent(code, "    ")}'
+            "\n  finally:\n    self._eval['env'].update(locals())"
+        )
 
         before = time.monotonic()
         # noinspection PyBroadException
@@ -638,7 +724,7 @@ class Core(commands.Cog):
             if output is not None:
                 output = repr(output)
         except Exception as e:
-            output = '\n'+self.get_traceback(e, 0)
+            output = '\n' + self.get_traceback(e, 0)
         after = time.monotonic()
         self._eval['count'] += 1
         count = self._eval['count']
@@ -671,5 +757,7 @@ class Core(commands.Cog):
             await ctx.trigger_typing()
 
             haste = await self.create_haste(message)
-            await ctx.send('Sorry, that output was too large, so I uploaded it to Hastebin instead.\n'
-                           f'{self.haste_url}/{haste["key"]}.py')
+            await ctx.send(
+                'Sorry, that output was too large, so I uploaded it to Hastebin instead.\n'
+                f'{self.haste_url}/{haste["key"]}.py'
+            )

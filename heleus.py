@@ -45,10 +45,13 @@ def create_bot(auto_shard: bool):
                 raise AssertionError('No redis instance specified')
             self.test = kwargs.pop('test', False)
             self.args = kwargs.pop('cargs', None)
-            self.boot_time = time.time()  # for uptime tracking, we'll use this later
+            self.boot_time = (
+                time.time()
+            )  # for uptime tracking, we'll use this later
             # used for keeping track of *this* instance over reboots
             self.instance_id = sha256(
-                f'{platform.node()}_{os.getcwd()}_{self.args.shard_id}_{self.args.shard_count}'.encode()).hexdigest()
+                f'{platform.node()}_{os.getcwd()}_{self.args.shard_id}_{self.args.shard_count}'.encode()
+            ).hexdigest()
             self.logger = logging.getLogger('heleus')
             self.logger.info('Heleus is booting, please wait...')
             self.settings = RedisCollection(self.redis, 'settings')
@@ -63,7 +66,11 @@ def create_bot(auto_shard: bool):
             self._pubsub_futures = {}  # futures temporarily stored here
             self._pubsub_broadcast_cache = {}
             self._pubsub_pool = ThreadPoolExecutor(max_workers=1)
-            self.t1 = threading.Thread(name='pubsub cache', target=self._pubsub_cache_loop, daemon=True)
+            self.t1 = threading.Thread(
+                name='pubsub cache',
+                target=self._pubsub_cache_loop,
+                daemon=True,
+            )
             if load_cogs is not None:
                 self.autoload = load_cogs.split(',')
             else:
@@ -83,7 +90,9 @@ def create_bot(auto_shard: bool):
             loader = await self.settings.get('loader', default)
             self.load_extension(loader)
             if loader != default:
-                self.logger.warning(f'Using third-party loader and core cog, {loader}.')
+                self.logger.warning(
+                    f'Using third-party loader and core cog, {loader}.'
+                )
 
         def _process_pubsub_event(self, event):
             _id = self.pubsub_id
@@ -101,20 +110,36 @@ def create_bot(auto_shard: bool):
                 # ping response
                 if target == self.shard_id or broadcast:
                     if _data['type'] == 'ping':
-                        self.redis.publish(_id, dill.dumps({'type': 'response', 'id': _data.get('id'),
-                                                            'response': 'Pong.'}))
+                        self.redis.publish(
+                            _id,
+                            dill.dumps(
+                                {
+                                    'type': 'response',
+                                    'id': _data.get('id'),
+                                    'response': 'Pong.',
+                                }
+                            ),
+                        )
                     if _data['type'] == 'coderequest':
-                        func = _data.get('function')  # get the function, discard if None
+                        func = _data.get(
+                            'function'
+                        )  # get the function, discard if None
                         if func is None:
                             return
-                        resp = {'type': 'response', 'id': _data.get('id'), 'response': None}
+                        resp = {
+                            'type': 'response',
+                            'id': _data.get('id'),
+                            'response': None,
+                        }
                         if broadcast:
                             resp['from'] = self.shard_id
                         args = _data.get('args', ())
                         kwargs = _data.get('kwargs', {})
                         try:
                             # noinspection PyCallingNonCallable
-                            resp['response'] = func(self, *args, **kwargs)  # this gets run in a thread so whatever
+                            resp['response'] = func(
+                                self, *args, **kwargs
+                            )  # this gets run in a thread so whatever
                         except Exception as e:
                             resp['response'] = e
                         try:
@@ -131,13 +156,20 @@ def create_bot(auto_shard: bool):
                         return
                     if __id not in self._pubsub_futures:
                         return
-                    if __id not in self._pubsub_broadcast_cache and _from is not None:
+                    if (
+                        __id not in self._pubsub_broadcast_cache
+                        and _from is not None
+                    ):
                         return
                     if _from is None:
-                        self._pubsub_futures[__id].set_result(_data.get('response'))
+                        self._pubsub_futures[__id].set_result(
+                            _data.get('response')
+                        )
                         del self._pubsub_futures[__id]
                     else:
-                        self._pubsub_broadcast_cache[__id][_from] = _data.get('response')
+                        self._pubsub_broadcast_cache[__id][_from] = _data.get(
+                            'response'
+                        )
 
             except dill.UnpicklingError:
                 return
@@ -153,7 +185,10 @@ def create_bot(auto_shard: bool):
             while True:
                 for k, v in dict(self._pubsub_broadcast_cache).items():
                     contents = [v[x] for x in v if x != 'expires']
-                    if v['expires'] < time.monotonic() or NoResponse() not in contents:
+                    if (
+                        v['expires'] < time.monotonic()
+                        or NoResponse() not in contents
+                    ):
                         del v['expires']
                         self._pubsub_futures[k].set_result(v)
                         del self._pubsub_futures[k]
@@ -166,29 +201,43 @@ def create_bot(auto_shard: bool):
             request = {'id': _id, 'target': target}
             request.update(kwargs)
             if target == 'all':
-                cache = {k: NoResponse() for k in range(0, self.shard_count)}  # prepare the cache
+                cache = {
+                    k: NoResponse() for k in range(0, self.shard_count)
+                }  # prepare the cache
                 cache['expires'] = time.monotonic() + broadcast_timeout
                 self._pubsub_broadcast_cache[_id] = cache
             self.redis.publish(self.pubsub_id, dill.dumps(request))
             return fut
 
         async def run_on_shard(self, shard, func, *args, **kwargs):
-            return await self.request(shard, type='coderequest', function=func, args=args, kwargs=kwargs)
+            return await self.request(
+                shard,
+                type='coderequest',
+                function=func,
+                args=args,
+                kwargs=kwargs,
+            )
 
         async def ping_shard(self, shard, timeout=1):
             try:
-                await asyncio.wait_for(self.request(shard, type='ping'), timeout=timeout)
+                await asyncio.wait_for(
+                    self.request(shard, type='ping'), timeout=timeout
+                )
                 return True
             except TimeoutError:
                 return False
 
         async def on_ready(self):
-            await self.redis.set('__info__',
-                                 f'This database is used by the Heleus Discord bot, logged in as user {self.user}.')
+            await self.redis.set(
+                '__info__',
+                f'This database is used by the Heleus Discord bot, logged in as user {self.user}.',
+            )
             self.logger.info('Heleus is connected!')
             self.logger.info(f'Logged in as {self.user}.')
             if self.shard_id is not None:
-                self.logger.info(f'Shard {self.shard_id + 1} of {self.shard_count}.')
+                self.logger.info(
+                    f'Shard {self.shard_id + 1} of {self.shard_count}.'
+                )
             if self.user.bot:
                 app_info = await self.application_info()
                 self.invite_url = dutils.oauth_url(app_info.id)
@@ -196,7 +245,10 @@ def create_bot(auto_shard: bool):
                 self.team = app_info.team
                 if self.team:
                     for member in self.team.members:
-                        if member.membership_state == discord.TeamMembershipState.accepted:
+                        if (
+                            member.membership_state
+                            == discord.TeamMembershipState.accepted
+                        ):
                             self.owner.append(member)
                 else:
                     self.owner = [app_info.owner]
@@ -214,7 +266,11 @@ def create_bot(auto_shard: bool):
 
         def __repr__(self):
             return '<Heleus username={} shard_id={} shard_count={}>'.format(
-                *[repr(x) for x in [self.user.name, self.shard_id, self.shard_count]])
+                *[
+                    repr(x)
+                    for x in [self.user.name, self.shard_id, self.shard_count]
+                ]
+            )
 
     return Heleus
 
@@ -229,9 +285,12 @@ async def send_cmd_help(ctx):
 
 if __name__ == '__main__':
     # Get defaults for argparse
-    help_description = os.environ.get('HELEUS_HELP', 'Heleus, an open-source Discord bot maintained by DerpyChap, '
-                                                     'forked from Liara by Pandentia and contributors\n'
-                                                     'https://github.com/nerdcubed/Heleus')
+    help_description = os.environ.get(
+        'HELEUS_HELP',
+        'Heleus, an open-source Discord bot maintained by DerpyChap, '
+        'forked from Liara by Pandentia and contributors\n'
+        'https://github.com/nerdcubed/Heleus',
+    )
     runtime_name = os.environ.get('HELEUS_NAME', 'Heleus')
     token = os.environ.get('HELEUS_TOKEN', None)
     redis_host = os.environ.get('HELEUS_REDIS_HOST', 'localhost')
@@ -240,8 +299,10 @@ if __name__ == '__main__':
         redis_port = int(os.environ.get('HELEUS_REDIS_PORT', 6379))
         redis_db = int(os.environ.get('HELEUS_REDIS_DB', 0))
     except ValueError:
-        print('Error parsing environment variables HELEUS_REDIS_PORT or HELEUS_REDIS_DB\n'
-              'Please check that these can be converted to integers')
+        print(
+            'Error parsing environment variables HELEUS_REDIS_PORT or HELEUS_REDIS_DB\n'
+            'Please check that these can be converted to integers'
+        )
         exit(4)
 
     shard_id = os.environ.get('HELEUS_SHARD_ID', None)
@@ -252,8 +313,10 @@ if __name__ == '__main__':
         if shard_count is not None:
             shard_count = int(shard_count)
     except ValueError:
-        print('Error parsing environment variables HELEUS_SHARD_ID or HELEUS_SHARD_COUNT\n'
-              'Please check that these can be converted to integers')
+        print(
+            'Error parsing environment variables HELEUS_SHARD_ID or HELEUS_SHARD_COUNT\n'
+            'Please check that these can be converted to integers'
+        )
         exit(4)
 
     message_cache = os.environ.get('HELEUS_MESSAGE_CACHE_COUNT', 5000)
@@ -261,8 +324,10 @@ if __name__ == '__main__':
         if message_cache is not None:
             message_cache = int(message_cache)
     except ValueError:
-        print('Error parsing environment variable HELEUS_MESSAGE_CACHE_COUNT\n'
-              'Please check that this can be converted to an integer')
+        print(
+            'Error parsing environment variable HELEUS_MESSAGE_CACHE_COUNT\n'
+            'Please check that this can be converted to an integer'
+        )
         exit(4)
 
     load_cogs = os.environ.get('HELEUS_LOAD_COGS', None)
@@ -271,34 +336,84 @@ if __name__ == '__main__':
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--description', type=str, help='modify the bot description shown in the help command',
-                        default=help_description)
-    parser.add_argument('--name', type=str, help='allows for white labeling Heleus', default=runtime_name)
-    parser.add_argument('--selfbot', help='enables selfbot mode', action='store_true')
-    parser.add_argument('--userbot', help='enables userbot mode, with the specified owner ID', type=int, default=None)
+    parser.add_argument(
+        '--description',
+        type=str,
+        help='modify the bot description shown in the help command',
+        default=help_description,
+    )
+    parser.add_argument(
+        '--name',
+        type=str,
+        help='allows for white labeling Heleus',
+        default=runtime_name,
+    )
+    parser.add_argument(
+        '--selfbot', help='enables selfbot mode', action='store_true'
+    )
+    parser.add_argument(
+        '--userbot',
+        help='enables userbot mode, with the specified owner ID',
+        type=int,
+        default=None,
+    )
     parser.add_argument('--debug', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--test', help=argparse.SUPPRESS, action='store_true')
-    parser.add_argument('--message_cache_count', help='sets the maximum amount of messages to cache in Heleus.messages',
-                        default=message_cache, type=int)
-    parser.add_argument('--uvloop', help='enables uvloop mode', action='store_true')
-    parser.add_argument('--stateless', help='disables file storage', action='store_true')
-    parser.add_argument('--cogs', help='a comma separated list of cogs to automatically load on startup',
-                        default=load_cogs)
-    parser.add_argument('--intents', help='a comma separated list of Gateway Intents to enable', default=intents)
-    parser.add_argument('token', type=str, help='sets the token', default=token, nargs='?')
+    parser.add_argument(
+        '--message_cache_count',
+        help='sets the maximum amount of messages to cache in Heleus.messages',
+        default=message_cache,
+        type=int,
+    )
+    parser.add_argument(
+        '--uvloop', help='enables uvloop mode', action='store_true'
+    )
+    parser.add_argument(
+        '--stateless', help='disables file storage', action='store_true'
+    )
+    parser.add_argument(
+        '--cogs',
+        help='a comma separated list of cogs to automatically load on startup',
+        default=load_cogs,
+    )
+    parser.add_argument(
+        '--intents',
+        help='a comma separated list of Gateway Intents to enable',
+        default=intents,
+    )
+    parser.add_argument(
+        'token', type=str, help='sets the token', default=token, nargs='?'
+    )
     shard_grp = parser.add_argument_group('sharding')
     # noinspection PyUnboundLocalVariable
-    shard_grp.add_argument('--shard_id', type=int, help='the shard ID the bot should run on', default=shard_id)
+    shard_grp.add_argument(
+        '--shard_id',
+        type=int,
+        help='the shard ID the bot should run on',
+        default=shard_id,
+    )
     # noinspection PyUnboundLocalVariable
-    shard_grp.add_argument('--shard_count', type=int, help='the total number of shards you are planning to run',
-                           default=shard_count)
+    shard_grp.add_argument(
+        '--shard_count',
+        type=int,
+        help='the total number of shards you are planning to run',
+        default=shard_count,
+    )
     redis_grp = parser.add_argument_group('redis')
-    redis_grp.add_argument('--host', type=str, help='the Redis host', default=redis_host)
+    redis_grp.add_argument(
+        '--host', type=str, help='the Redis host', default=redis_host
+    )
     # noinspection PyUnboundLocalVariable
-    redis_grp.add_argument('--port', type=int, help='the Redis port', default=redis_port)
+    redis_grp.add_argument(
+        '--port', type=int, help='the Redis port', default=redis_port
+    )
     # noinspection PyUnboundLocalVariable
-    redis_grp.add_argument('--db', type=int, help='the Redis database', default=redis_db)
-    redis_grp.add_argument('--password', type=str, help='the Redis password', default=redis_pass)
+    redis_grp.add_argument(
+        '--db', type=int, help='the Redis database', default=redis_db
+    )
+    redis_grp.add_argument(
+        '--password', type=str, help='the Redis password', default=redis_pass
+    )
     cargs = parser.parse_args()
 
     if cargs.token is None:
@@ -343,7 +458,12 @@ if __name__ == '__main__':
         os.chdir('..')
 
     # Define a format
-    now = str(datetime.datetime.now()).replace(' ', '_').replace(':', '-').split('.')[0]
+    now = (
+        str(datetime.datetime.now())
+        .replace(' ', '_')
+        .replace(':', '-')
+        .split('.')[0]
+    )
     formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
 
     # Setting up loggers
@@ -395,25 +515,32 @@ if __name__ == '__main__':
     else:
         intents = discord.Intents.none()
     if not intents.guilds:
-        logger.warning('Running without the guilds intent is not recommend and is not officially supported. '
-                       'You have been warned!')
-
+        logger.warning(
+            'Running without the guilds intent is not recommend and is not officially supported. '
+            'You have been warned!'
+        )
 
     def is_docker():
         path = '/proc/self/cgroup'
-        return os.path.exists('/.dockerenv') or os.path.isfile(path) and any('docker' in line for line in open(path))
-
+        return (
+            os.path.exists('/.dockerenv')
+            or os.path.isfile(path)
+            and any('docker' in line for line in open(path))
+        )
 
     if not is_docker():
         logger.warning(
             'Running outside of a Docker container, while should work with the right setup, is not officially '
-            'supported. DO NOT expect any support if things go wrong. You\'ve been warned!')
+            "supported. DO NOT expect any support if things go wrong. You've been warned!"
+        )
 
     if cargs.shard_id is not None:  # usability
         cargs.shard_id -= 1
 
     # Redis connection attempt
-    redis_conn = aredis.StrictRedis(host=cargs.host, port=cargs.port, db=cargs.db, password=cargs.password)
+    redis_conn = aredis.StrictRedis(
+        host=cargs.host, port=cargs.port, db=cargs.db, password=cargs.password
+    )
 
     # sharding logic
     unsharded = True
@@ -428,11 +555,21 @@ if __name__ == '__main__':
 
     # if we want to make an auto-reboot loop now, it would be a hell of a lot easier now
     # noinspection PyUnboundLocalVariable
-    heleus = heleus_cls('!', load_cogs=cargs.cogs, intents=intents, shard_id=cargs.shard_id,
-                        shard_count=cargs.shard_count, description=cargs.description, self_bot=cargs.selfbot,
-                        pm_help=None, max_messages=message_cache, redis=redis_conn, cargs=cargs,
-                        test=cargs.test, name=cargs.name)  # heleus-specific args
-
+    heleus = heleus_cls(
+        '!',
+        load_cogs=cargs.cogs,
+        intents=intents,
+        shard_id=cargs.shard_id,
+        shard_count=cargs.shard_count,
+        description=cargs.description,
+        self_bot=cargs.selfbot,
+        pm_help=None,
+        max_messages=message_cache,
+        redis=redis_conn,
+        cargs=cargs,
+        test=cargs.test,
+        name=cargs.name,
+    )  # heleus-specific args
 
     async def run_bot():
         await heleus.redis.ping()
@@ -447,7 +584,9 @@ if __name__ == '__main__':
         try:
             loop.run_until_complete(run_bot())
         except KeyboardInterrupt:
-            logger.info('Shutting down threads and quitting. Thank you for using Heleus.')
+            logger.info(
+                'Shutting down threads and quitting. Thank you for using Heleus.'
+            )
             loop.run_until_complete(heleus.logout())
         except aredis.ConnectionError:
             exit_code = 2
@@ -462,6 +601,5 @@ if __name__ == '__main__':
         finally:
             loop.close()
             return exit_code
-
 
     exit(run_app())

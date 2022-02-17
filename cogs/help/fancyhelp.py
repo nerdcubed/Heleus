@@ -21,7 +21,7 @@ class FancyHelp(commands.HelpCommand):
 
         super().__init__(**options)
 
-    HIDDEN = "🕵️‍"
+    HIDDEN = '🕵️‍'
     # Used to help align text outside of code blocks
     TAB = '   '
     # Used for when we need an embed field value to
@@ -45,7 +45,11 @@ class FancyHelp(commands.HelpCommand):
         return colour
 
     def split_description(self, description):
-        groups = [x for x in self.regex.findall(description) if len(x[0]) == len(x[1])]
+        groups = [
+            x
+            for x in self.regex.findall(description)
+            if len(x[0]) == len(x[1])
+        ]
         if not groups:
             return description, None
         topics = []
@@ -127,8 +131,13 @@ class FancyHelp(commands.HelpCommand):
         if embed:
             embed = copy.deepcopy(embed)
             embeds.append(embed)
-            char_limit += len(embed.title) + len(embed.description) + len(embed.footer.text) \
-                + len(embed.author.name) + sum([len(x.name) + len(x.value) for x in embed.fields])
+            char_limit += (
+                len(embed.title)
+                + len(embed.description)
+                + len(embed.footer.text)
+                + len(embed.author.name)
+                + sum([len(x.name) + len(x.value) for x in embed.fields])
+            )
             colour = embed.colour
         else:
             colour = self.get_colour()
@@ -140,21 +149,28 @@ class FancyHelp(commands.HelpCommand):
             char_limit += len(field_name)
             for command in _commands:
                 # Grant a little overhead just in case
-                if char_limit + len(command) >= 5500 or len(embed.fields) == 24:
+                if (
+                    char_limit + len(command) >= 5500
+                    or len(embed.fields) == 24
+                ):
                     embeds.append(embed)
                     embed = discord.Embed(colour=colour)
                     char_limit = 8
                     string = ''
                     field_name = self.BLANK
                     write_desc = True
-                if len(string) + len(command) + 1 <= (2048 if write_desc else 1024):
+                if len(string) + len(command) + 1 <= (
+                    2048 if write_desc else 1024
+                ):
                     to_add = command if not string else f'\n{command}'
                     char_limit += len(to_add)
                     string += to_add
                 else:
                     if write_desc:
                         embed.description = string
-                    embed.add_field(name=field_name, value=string, inline=False)
+                    embed.add_field(
+                        name=field_name, value=string, inline=False
+                    )
                     string = ''
                     field_name = self.BLANK
                     char_limit += 8
@@ -193,9 +209,13 @@ class FancyHelp(commands.HelpCommand):
                     elif not cog:
                         for command in filtered:
                             if hasattr(command, 'help_group'):
-                                groups.setdefault(command.help_group, []).append(command)
+                                groups.setdefault(
+                                    command.help_group, []
+                                ).append(command)
                             else:
-                                groups.setdefault('No Category', []).append(command)
+                                groups.setdefault('No Category', []).append(
+                                    command
+                                )
                     else:
                         groups.setdefault('No Category', []).extend(filtered)
             groups = OrderedDict(sorted(groups.items()))
@@ -223,7 +243,11 @@ class FancyHelp(commands.HelpCommand):
             embed.description += f'\n\n{description}'
             if topics:
                 for topic, text in topics:
-                    embed.add_field(name=topic, value=text if text else self.BLANK, inline=False)
+                    embed.add_field(
+                        name=topic,
+                        value=text if text else self.BLANK,
+                        inline=False,
+                    )
 
         filtered = await self.filter_commands(cog.get_commands(), sort=True)
         if filtered:
@@ -243,7 +267,9 @@ class FancyHelp(commands.HelpCommand):
         embed = discord.Embed(colour=self.get_colour())
         embed.set_author(name='❓ Command Help')
         if group.cog:
-            embed.description = f'**{group.cog.qualified_name} • {group.qualified_name}**'
+            embed.description = (
+                f'**{group.cog.qualified_name} • {group.qualified_name}**'
+            )
             if hasattr(group, 'help_image'):
                 embed.set_thumbnail(url=group.help_image)
             elif hasattr(group.cog, 'help_image'):
@@ -253,20 +279,32 @@ class FancyHelp(commands.HelpCommand):
                 embed.set_thumbnail(url=group.help_image)
             embed.description = f'**{group.qualified_name}**'
 
-        embed.add_field(name='Usage', value=f'`{self.get_command_signature(group)}`', inline=False)
+        embed.add_field(
+            name='Usage',
+            value=f'`{self.get_command_signature(group)}`',
+            inline=False,
+        )
 
         if group.help:
             description, topics = self.split_description(group.help)
-            embed.add_field(name='Description', value=description, inline=False)
+            embed.add_field(
+                name='Description', value=description, inline=False
+            )
             if topics:
                 for topic, text in topics:
-                    embed.add_field(name=topic, value=text if text else self.BLANK, inline=False)
+                    embed.add_field(
+                        name=topic,
+                        value=text if text else self.BLANK,
+                        inline=False,
+                    )
 
         if isinstance(group, commands.Group):
             filtered = await self.filter_commands(group.commands, sort=True)
             if filtered:
                 formatted = self.generate_command_strs(filtered)
-                embeds = self.format_commands({'Subcommands': formatted}, embed)
+                embeds = self.format_commands(
+                    {'Subcommands': formatted}, embed
+                )
                 embeds[-1].set_footer(text=self.get_ending_note(group))
                 for e in embeds:
                     await self.get_destination().send(embed=e)
