@@ -60,7 +60,6 @@ def create_bot(auto_shard: bool):
             self.team = None  # and this
             self.send_cmd_help = send_cmd_help
             self.send_command_help = send_cmd_help  # seems more like a method name discord.py would choose
-            self.self_bot = kwargs.get('self_bot', False)
             db = str(self.redis.connection_pool.connection_kwargs['db'])
             self.pubsub_id = f'heleus.{db}.pubsub.code'
             self._pubsub_futures = {}  # futures temporarily stored here
@@ -238,27 +237,22 @@ def create_bot(auto_shard: bool):
                 self.logger.info(
                     f'Shard {self.shard_id + 1} of {self.shard_count}.'
                 )
-            if self.user.bot:
-                app_info = await self.application_info()
-                self.invite_url = dutils.oauth_url(app_info.id)
-                self.logger.info(f'Invite URL: {self.invite_url}')
-                self.team = app_info.team
-                if self.team:
-                    for member in self.team.members:
-                        if (
-                            member.membership_state
-                            == discord.TeamMembershipState.accepted
-                        ):
-                            self.owner.append(member)
-                else:
-                    self.owner = [app_info.owner]
-            elif self.self_bot:
-                self.owner = [self.user]
+            app_info = await self.application_info()
+            self.invite_url = dutils.oauth_url(app_info.id)
+            self.logger.info(f'Invite URL: {self.invite_url}')
+            self.team = app_info.team
+            if self.team:
+                for member in self.team.members:
+                    if (
+                        member.membership_state
+                        == discord.TeamMembershipState.accepted
+                    ):
+                        self.owner.append(member)
             else:
-                self.owner = [self.get_user(self.args.userbot)]
+                self.owner = [app_info.owner]
             if self.test:
                 self.logger.info('Test complete, logging out...')
-                await self.logout()
+                await self.close()
                 exit(0)  # jenkins' little helper
 
         async def on_message(self, message):
@@ -562,7 +556,6 @@ if __name__ == '__main__':
         shard_id=cargs.shard_id,
         shard_count=cargs.shard_count,
         description=cargs.description,
-        self_bot=cargs.selfbot,
         pm_help=None,
         max_messages=message_cache,
         redis=redis_conn,
@@ -587,7 +580,7 @@ if __name__ == '__main__':
             logger.info(
                 'Shutting down threads and quitting. Thank you for using Heleus.'
             )
-            loop.run_until_complete(heleus.logout())
+            loop.run_until_complete(heleus.close())
         except aredis.ConnectionError:
             exit_code = 2
             logger.critical('Unable to connect to Redis.')
@@ -597,7 +590,7 @@ if __name__ == '__main__':
         except Exception:
             exit_code = 1
             logger.exception('Exception while running Heleus.')
-            loop.run_until_complete(heleus.logout())
+            loop.run_until_complete(heleus.close())
         finally:
             loop.close()
             return exit_code

@@ -581,7 +581,7 @@ class Core(commands.Cog):
         for cog in list(self.heleus.extensions):
             self.heleus.unload_extension(cog)
         await asyncio.sleep(2)  # to let some functions clean up their mess
-        await self.heleus.logout()
+        await self.heleus.close()
 
     @commands.command(aliases=['shutdown'])
     @checks.is_owner()

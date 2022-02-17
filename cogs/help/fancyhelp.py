@@ -81,11 +81,11 @@ class FancyHelp(commands.HelpCommand):
 
     def get_ending_note(self, command=None):
         if not command:
-            return f'Use {self.clean_prefix}{self.invoked_with} [command] for more info on a command.'
+            return f'Use {self.context.clean_prefix}{self.invoked_with} [command] for more info on a command.'
         if isinstance(command, commands.Group):
             return (
-                f'To use a subcommand, use {self.clean_prefix}{command.qualified_name} [command].\n'
-                f'Use {self.clean_prefix}{self.invoked_with} {command.qualified_name} [command] '
+                f'To use a subcommand, use {self.context.clean_prefix}{command.qualified_name} [command].\n'
+                f'Use {self.context.clean_prefix}{self.invoked_with} {command.qualified_name} [command] '
                 'for more info on a subcommand.'
             )
         else:
@@ -93,7 +93,7 @@ class FancyHelp(commands.HelpCommand):
 
     def get_command_signature(self, command):
         return (
-            f'{self.clean_prefix}{command.qualified_name}'
+            f'{self.context.clean_prefix}{command.qualified_name}'
             f'{" " + command.signature if command.signature else ""}'
         )
 

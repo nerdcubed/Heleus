@@ -17,7 +17,7 @@ async def role_check(ctx, _role):
 def permission_check(ctx, **permission_pairs):
     if not isinstance(ctx.channel, discord.TextChannel):
         return False
-    channel_permissions = dict(ctx.author.permissions_in(ctx.channel))
+    channel_permissions = dict(ctx.channel.permissions_for(ctx.author))
     for permission in permission_pairs:
         state = channel_permissions.get(permission, False)
         if state == permission_pairs[permission]:
