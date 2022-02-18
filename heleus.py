@@ -318,6 +318,8 @@ if __name__ == '__main__':
 
     intents = os.environ.get('HELEUS_INTENTS', 'all')
 
+    test_guilds = os.environ.get('HELEUS_TEST_GUILDS', None)
+
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -339,6 +341,11 @@ if __name__ == '__main__':
         help='sets the maximum amount of messages to cache in Heleus.messages',
         default=message_cache,
         type=int,
+    )
+    parser.add_argument(
+        '--test_guilds',
+        help='a comma separated list of guild IDs to configure as test servers',
+        default=test_guilds,
     )
     parser.add_argument(
         '--uvloop', help='enables uvloop mode', action='store_true'
@@ -487,6 +494,9 @@ if __name__ == '__main__':
             'You have been warned!'
         )
 
+    if cargs.test_guilds:
+        test_guilds = test_guilds.split(',')
+
     def is_docker():
         path = '/proc/self/cgroup'
         return (
@@ -521,6 +531,7 @@ if __name__ == '__main__':
     heleus = heleus_cls(
         load_cogs=cargs.cogs,
         intents=intents,
+        test_guilds=test_guilds,
         shard_id=cargs.shard_id,
         shard_count=cargs.shard_count,
         description=cargs.description,
