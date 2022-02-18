@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "Heleus"
-version = "0.1.0"
+version = "2.0.0"
 description = "A Discord bot forked from Liara. Built on disnake."
 authors = ["derpychap <holla@derpychap.co.uk>"]
 license = "MIT"
