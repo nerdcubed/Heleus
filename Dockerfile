@@ -7,7 +7,7 @@ COPY pyproject.toml pyproject.toml
 COPY poetry.lock poetry.lock
 
 RUN apt update && apt -y install libffi-dev && \
-    pip3 install -U poetry && \
+    pip3 install -U pip poetry && \
     poetry config virtualenvs.create false && \
     poetry install && \
     rm -rf /var/lib/apt/lists/*
