@@ -3,12 +3,12 @@ FROM python:3.10.2-buster
 RUN adduser --disabled-password --disabled-login --gecos '' python
 WORKDIR /app
 
-ENV LIBSODIUM_MAKE_ARGS=-j4
+ENV SODIUM_INSTALL=system
 
 COPY pyproject.toml pyproject.toml
 COPY poetry.lock poetry.lock
 
-RUN apt update && apt -y install libffi-dev && \
+RUN apt update && apt -y install libffi-dev libsodium-dev && \
     pip3 install -U pip poetry && \
     poetry config virtualenvs.create false && \
     poetry install && \
