@@ -3,6 +3,8 @@ FROM python:3.10.2-buster
 RUN adduser --disabled-password --disabled-login --gecos '' python
 WORKDIR /app
 
+ENV LIBSODIUM_MAKE_ARGS=-j4
+
 COPY pyproject.toml pyproject.toml
 COPY poetry.lock poetry.lock
 
