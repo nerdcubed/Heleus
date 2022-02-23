@@ -1,7 +1,7 @@
 import platform
 
 import datetime
-from discord.ext import commands
+from disnake.ext import commands
 
 from utils import checks
 from utils.runtime import CoreMode
@@ -17,11 +17,16 @@ tabulate.MIN_PADDING = 0  # makes for a neater table
 
 
 def gather_info(heleus):
-    return {'status': heleus.settings[heleus.instance_id]['mode'].value, 'guilds': len(heleus.guilds),
-            'members': len(set(heleus.get_all_members())), 'up_since': heleus.boot_time,
-            'messages_seen': heleus.get_cog('Sharding').messages, 'host': platform.node().lower(),
-            'memory': psutil.Process().memory_full_info().uss / 1024**2,
-            'host_uptime': psutil.boot_time()}
+    return {
+        'status': heleus.settings[heleus.instance_id]['mode'].value,
+        'guilds': len(heleus.guilds),
+        'members': len(set(heleus.get_all_members())),
+        'up_since': heleus.boot_time,
+        'messages_seen': heleus.get_cog('Sharding').messages,
+        'host': platform.node().lower(),
+        'memory': psutil.Process().memory_full_info().uss / 1024 ** 2,
+        'host_uptime': psutil.boot_time(),
+    }
 
 
 def set_mode(heleus, mode):
@@ -72,22 +77,56 @@ class Sharding(commands.Cog):
 
         table = []
         if mode == 'generic':
-            table = [['Active', 'Shard', 'Status', 'Guilds', 'Members', 'Messages', ]]
+            table = [
+                [
+                    'Active',
+                    'Shard',
+                    'Status',
+                    'Guilds',
+                    'Members',
+                    'Messages',
+                ]
+            ]
             for shard, state in shards.items():
-                line = ['*' if shard == self.heleus.shard_id else '', shard+1, state['status'],
-                        state.get('guilds', ''),
-                        state.get('members', ''),
-                        state.get('messages_seen', '')]
+                line = [
+                    '*' if shard == self.heleus.shard_id else '',
+                    shard + 1,
+                    state['status'],
+                    state.get('guilds', ''),
+                    state.get('members', ''),
+                    state.get('messages_seen', ''),
+                ]
                 table.append(line)
         if mode == 'host':
-            table = [['Active', 'Shard', 'Status', 'Host', 'Memory', 'Up Since', 'Host Up Since']]
+            table = [
+                [
+                    'Active',
+                    'Shard',
+                    'Status',
+                    'Host',
+                    'Memory',
+                    'Up Since',
+                    'Host Up Since',
+                ]
+            ]
             for shard, state in shards.items():
-                line = ['*' if shard - 1 == self.heleus.shard_id else '', shard, state['status'],
-                        state.get('host', ''),
-                        state.get('memory', ''),
-                        datetime.datetime.utcfromtimestamp(state.get('up_since', 0)) if state.get('up_since') else '',
-                        datetime.datetime.utcfromtimestamp(state.get('host_uptime', 0)) if state.get('host_uptime')
-                        else '']
+                line = [
+                    '*' if shard - 1 == self.heleus.shard_id else '',
+                    shard,
+                    state['status'],
+                    state.get('host', ''),
+                    state.get('memory', ''),
+                    datetime.datetime.utcfromtimestamp(
+                        state.get('up_since', 0)
+                    )
+                    if state.get('up_since')
+                    else '',
+                    datetime.datetime.utcfromtimestamp(
+                        state.get('host_uptime', 0)
+                    )
+                    if state.get('host_uptime')
+                    else '',
+                ]
                 table.append(line)
         table = f'```prolog\n{tabulate.tabulate(table, tablefmt="psql", headers="firstrow")}\n```'
         await msg.edit(content=table)
@@ -95,7 +134,9 @@ class Sharding(commands.Cog):
     @shards.command()
     async def get(self, ctx):
         """Gets the current shard."""
-        await ctx.send(f'I am shard {self.heleus.shard_id+1} of {self.heleus.shard_count}.')
+        await ctx.send(
+            f'I am shard {self.heleus.shard_id+1} of {self.heleus.shard_count}.'
+        )
 
     @shards.command()
     @checks.is_owner()
@@ -105,13 +146,18 @@ class Sharding(commands.Cog):
         - shard: The shard of which you want to set the mode
         - mode: The mode you want to set the shard to
         """
-        active = await self.heleus.ping_shard(shard-1)
+        active = await self.heleus.ping_shard(shard - 1)
         if not active:
             return await ctx.send('Shard not online.')
-        if self.heleus.shard_id == shard-1 and mode in (CoreMode.down, CoreMode.boot):
-            return await ctx.send('This action would be too dangerous to perform on the current shard. Try running '
-                                  'this command from a different shard targeting this one.')
-        await self.heleus.run_on_shard(shard-1, set_mode, mode)
+        if self.heleus.shard_id == shard - 1 and mode in (
+            CoreMode.down,
+            CoreMode.boot,
+        ):
+            return await ctx.send(
+                'This action would be too dangerous to perform on the current shard. Try running '
+                'this command from a different shard targeting this one.'
+            )
+        await self.heleus.run_on_shard(shard - 1, set_mode, mode)
         await ctx.send('Mode set.')
 
     @shards.command(aliases=['shutdown'])
@@ -121,10 +167,10 @@ class Sharding(commands.Cog):
 
         - shard: The shard you want to halt
         """
-        active = await self.heleus.ping_shard(shard-1)
+        active = await self.heleus.ping_shard(shard - 1)
         if not active:
             return await ctx.send('Shard not online.')
-        await self.heleus.run_on_shard(shard-1, _halt)
+        await self.heleus.run_on_shard(shard - 1, _halt)
         await ctx.send('Halt command sent.')
 
     @shards.command()

@@ -1,14 +1,17 @@
-FROM python:3.9.0-buster
+FROM python:3.10.2-buster
 
 RUN adduser --disabled-password --disabled-login --gecos '' python
 WORKDIR /app
 
-COPY Pipfile Pipfile
-COPY Pipfile.lock Pipfile.lock
+ENV SODIUM_INSTALL=system
 
-RUN apt update && apt -y install libffi-dev && \
-    pip3 install -U pipenv uvloop && \
-    pipenv install --deploy --system && \
+COPY pyproject.toml pyproject.toml
+COPY poetry.lock poetry.lock
+
+RUN apt update && apt -y install libffi-dev libsodium-dev && \
+    pip3 install -U pip poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install && \
     rm -rf /var/lib/apt/lists/*
 
 RUN chown -R python:python /app

@@ -1,6 +1,6 @@
 import typing
 
-import aredis
+import coredis
 import dill
 
 
@@ -11,7 +11,7 @@ class _Nonexistant:
 class RedisCollection:
     __slots__ = ('redis', 'key')
 
-    def __init__(self, redis: aredis.StrictRedis, key):
+    def __init__(self, redis: coredis.StrictRedis, key):
         self.redis = redis
         self.key = key
 

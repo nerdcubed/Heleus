@@ -1,10 +1,11 @@
 import logging
-from discord import abc
-from discord.ext import commands
+from disnake import abc
+from disnake.ext import commands
 
 
 class CommandLog(commands.Cog):
     """A simple cog to log commands executed."""
+
     def __init__(self):
         self.log = logging.getLogger('heleus.command_log')
 
@@ -13,8 +14,10 @@ class CommandLog(commands.Cog):
         kwargs = ', '.join([f'{k}={repr(v)}' for k, v in ctx.kwargs.items()])
         args = f'with arguments {kwargs} ' if kwargs else ''
         if ctx.guild:
-            msg = f'{ctx.author} ({ctx.author.id}) executed command "{ctx.command}" {args}in {ctx.guild} '\
-                  f'({ctx.guild.id})'
+            msg = (
+                f'{ctx.author} ({ctx.author.id}) executed command "{ctx.command}" {args}in {ctx.guild} '
+                f'({ctx.guild.id})'
+            )
         elif isinstance(ctx.channel, abc.PrivateChannel):
             msg = f'{ctx.author} ({ctx.author.id}) executed command "{ctx.command}" {args}in DMs'
         else:

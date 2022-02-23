@@ -1,14 +1,23 @@
 import asyncio
 import typing
 
-import discord
-from discord.ext.commands import Context
+import disnake as discord
+from disnake.ext.commands import Context
 
 
 class Paginator:
-    def __init__(self, ctx: Context, pages: typing.Iterable, *, timeout=300, delete_message=True, predicate=None,
-                 delete_message_on_timeout=False):
+    def __init__(
+        self,
+        ctx: Context,
+        pages: typing.Iterable,
+        *,
+        timeout=300,
+        delete_message=True,
+        predicate=None,
+        delete_message_on_timeout=False,
+    ):
         if predicate is None:
+
             def predicate(_, user):
                 return user == ctx.message.author
 
@@ -30,7 +39,7 @@ class Paginator:
             '\N{BLACK LEFT-POINTING TRIANGLE}': self.previous_page,
             '\N{BLACK RIGHT-POINTING TRIANGLE}': self.next_page,
             '\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}': self.last_page,
-            '\N{BLACK SQUARE FOR STOP}': self.stop
+            '\N{BLACK SQUARE FOR STOP}': self.stop,
         }
 
         self._page = None
@@ -38,14 +47,18 @@ class Paginator:
     async def begin(self):
         """Starts pagination"""
         self._stopped = False
-        self._embed = discord.Embed(description='Please wait, pages are loading...')
+        self._embed = discord.Embed(
+            description='Please wait, pages are loading...'
+        )
         self._message = await self.target.send(embed=self._embed)
         for button in self.navigation:
             await self._message.add_reaction(button)
         await self.first_page()
         while not self._stopped:
             try:
-                reaction, user = await self._client.wait_for('reaction_add', check=self.predicate, timeout=self.timeout)
+                reaction, user = await self._client.wait_for(
+                    'reaction_add', check=self.predicate, timeout=self.timeout
+                )
             except asyncio.TimeoutError:
                 await self.stop(delete=self.delete_msg_timeout)
                 continue
@@ -78,11 +91,15 @@ class Paginator:
             await self._message.clear_reactions()
         except discord.Forbidden:
             for button in self.navigation:
-                await self._message.remove_reaction(button, self._message.author)
+                await self._message.remove_reaction(
+                    button, self._message.author
+                )
 
     async def format_page(self):
         self._embed.description = self.pages[self._page]
-        self._embed.set_footer(text=self.footer.format(self._page + 1, len(self.pages)))
+        self._embed.set_footer(
+            text=self.footer.format(self._page + 1, len(self.pages))
+        )
         await self._message.edit(embed=self._embed)
 
     async def first_page(self):
