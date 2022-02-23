@@ -495,7 +495,7 @@ if __name__ == '__main__':
         )
 
     if cargs.test_guilds:
-        test_guilds = test_guilds.split(',')
+        test_guilds = [int(id) for id in test_guilds.split(',')]
 
     def is_docker():
         path = '/proc/self/cgroup'
