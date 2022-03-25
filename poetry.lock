@@ -75,7 +75,7 @@ unicode_backport = ["unicodedata2"]
 
 [[package]]
 name = "coredis"
-version = "3.1.0"
+version = "3.1.1"
 description = "Python async client for Redis key-value store"
 category = "main"
 optional = false
@@ -328,7 +328,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "f6d4b20364c7b06db108da10dd37bff1c4ef4d6bae3f132145900144b191e5c9"
+content-hash = "faa9d81e465cd3a87a38c17efd6f74f953d600d09b158af8898dc7f03e8df9e2"
 
 [metadata.files]
 aiohttp = [
@@ -474,7 +474,7 @@ charset-normalizer = [
     {file = "charset_normalizer-2.0.12-py3-none-any.whl", hash = "sha256:6881edbebdb17b39b4eaaa821b438bf6eddffb4468cf344f09f89def34a8b1df"},
 ]
 coredis = [
-    {file = "coredis-3.1.0.tar.gz", hash = "sha256:2382767b6a4e4a2dc40687e68c3141ff2e1b299c718896ebd16715ec55b7a330"},
+    {file = "coredis-3.1.1.tar.gz", hash = "sha256:a120e7bf9db069ca6d41d090125afdc8e008e0914c76f3676119a3b7bdcc4851"},
 ]
 deprecated = [
     {file = "Deprecated-1.2.13-py2.py3-none-any.whl", hash = "sha256:64756e3e14c8c5eea9795d93c524551432a0be75629f8f29e67ab8caf076c76d"},
