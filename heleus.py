@@ -73,6 +73,7 @@ def create_bot(auto_shard: bool):
                 self.autoload = load_cogs.split(',')
             else:
                 self.autoload = None
+            self.loader = kwargs.pop('loader', 'cogs.core')
             super().__init__(*args, **kwargs)
 
             self.ready = False  # we expect the loader to set this once ready
@@ -85,11 +86,10 @@ def create_bot(auto_shard: bool):
 
             # load the core cog
             default = 'cogs.core'
-            loader = await self.settings.get('loader', default)
-            self.load_extension(loader)
+            self.load_extension(self.loader)
             if loader != default:
                 self.logger.warning(
-                    f'Using third-party loader and core cog, {loader}.'
+                    f'Using third-party loader and core cog, {loader}. No support will be provided if anything goes wrong!'
                 )
 
         def _process_pubsub_event(self, event):
@@ -320,6 +320,8 @@ if __name__ == '__main__':
 
     test_guilds = os.environ.get('HELEUS_TEST_GUILDS', None)
 
+    loader = os.environ.get('HELEUS_LOADER', None)
+
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -541,6 +543,7 @@ if __name__ == '__main__':
         cargs=cargs,
         test=cargs.test,
         name=cargs.name,
+        loader=loader,
     )  # heleus-specific args
 
     async def run_bot():
