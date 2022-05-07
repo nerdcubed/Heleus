@@ -402,7 +402,7 @@ class Core(commands.Cog):
             pass
 
     @commands.group(name='set', invoke_without_command=True)
-    @checks.admin_or_permissions(manage_guild=True)
+    @checks.is_owner()
     async def set_cmd(self, ctx):
         """Sets {}'s settings."""
         await self.heleus.send_command_help(ctx)
@@ -450,110 +450,6 @@ class Core(commands.Cog):
             await ctx.send('Owner set.')
         else:
             await ctx.send('Owners set.')
-
-    @set_cmd.command()
-    @commands.guild_only()
-    @checks.admin_or_permissions(manage_guild=True)
-    async def admin(self, ctx, *, role: discord.Role = None):
-        """Sets {}'s admin role.
-        Roles are case sensitive.
-
-        - role: The role to use as the admin role
-        """
-        roles = await self._get_guild_setting(ctx.guild.id, 'roles', {})
-        if role is not None:
-            roles['admin'] = role.id
-            await ctx.send(f'Admin role set to `{role.name}` successfully.')
-        else:
-            if 'admin' in roles:
-                roles.pop('admin')
-            await ctx.send(
-                'Admin role cleared.\n'
-                f"If you didn't intend to do this, use `{ctx.prefix}help set admin` for help."
-            )
-        await self._set_guild_setting(ctx.guild.id, 'roles', roles)
-
-    @set_cmd.command()
-    @commands.guild_only()
-    @checks.admin_or_permissions(manage_guild=True)
-    async def moderator(self, ctx, *, role: discord.Role = None):
-        """Sets {}'s moderator role.
-        Roles are case sensitive.
-
-        - role: The role to use as the moderator role
-        """
-        roles = await self._get_guild_setting(ctx.guild.id, 'roles', {})
-        if role is not None:
-            roles['mod'] = role.id
-            await ctx.send(f'Moderator role set to `{role}` successfully.')
-        else:
-            if 'mod' in roles:
-                roles.pop('mod')
-            await ctx.send(
-                'Moderator role cleared.\n'
-                f"If you didn't intend to do this, use `{ctx.prefix}help set moderator` for help."
-            )
-        await self._set_guild_setting(ctx.guild.id, 'roles', roles)
-
-    @set_cmd.group(name='ignore', invoke_without_command=True)
-    @checks.admin_or_permissions(manage_guild=True)
-    @commands.guild_only()
-    async def ignore_cmd(self, ctx):
-        """Helps you ignore/unignore servers/channels."""
-        await self.heleus.send_command_help(ctx)
-
-    @ignore_cmd.command()
-    @checks.admin_or_permissions(manage_guild=True)
-    @commands.guild_only()
-    async def channel(self, ctx, state: bool):
-        """Ignores/unignores the current channel.
-
-        - state: Whether or not to ignore the current channel
-        """
-        ignores = await self._get_guild_setting(ctx.guild.id, 'ignores', [])
-        channel = ctx.channel.id
-
-        if state:
-            if channel not in ignores:
-                ignores.append(channel)
-            await ctx.send('Channel ignored.')
-        else:
-            if channel in ignores:
-                ignores.remove(channel)
-            await ctx.send('Channel unignored.')
-        await self._set_guild_setting(ctx.guild.id, 'ignores', ignores)
-
-    @ignore_cmd.command()
-    @checks.admin_or_permissions(manage_guild=True)
-    @commands.guild_only()
-    async def server(self, ctx, state: bool):
-        """Ignores/unignores the current server.
-
-        - state: Whether or not to ignore the current server
-        """
-        if not self.heleus.intents.guilds:
-            return await self.ctx.send(
-                'Cannot ignore servers without the `guilds` intent.'
-            )
-        ignores = await self._get_guild_setting(ctx.guild.id, 'ignores', [])
-        guild = ctx.guild.id
-
-        if state:
-            if guild not in ignores:
-                ignores.append(guild)
-            await ctx.send('Server ignored.')
-        else:
-            if guild in ignores:
-                ignores.remove(guild)
-            await ctx.send('Server unignored.')
-        await self._set_guild_setting(ctx.guild.id, 'ignores', ignores)
-
-    async def halt_(self):
-        self.ignore_db = True
-        for cog in list(self.heleus.extensions):
-            self.heleus.unload_extension(cog)
-        await asyncio.sleep(2)  # to let some functions clean up their mess
-        await self.heleus.close()
 
     @commands.command(aliases=['shutdown'])
     @checks.is_owner()
