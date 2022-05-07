@@ -140,30 +140,6 @@ class Core(commands.Cog):
             instance['mode'] = CoreMode.up
             await self.settings.set(self.heleus.instance_id, instance)
 
-        # migration
-        keys = await self.settings.keys()
-        if 'roles' in keys:
-            roles = await self.settings.get('roles')
-            for guild in roles:
-                await self._set_guild_setting(
-                    int(guild),
-                    'roles',
-                    {k.rstrip('_role'): v for k, v in roles[guild].items()},
-                )
-            await self.settings.delete('roles')
-        if 'ignores' in keys:
-            ignores = await self.settings.get('ignores')
-            for guild in ignores:
-                entry = []
-                [
-                    entry.append(int(x))
-                    for x in ignores[guild]['ignored_channels']
-                ]
-                if ignores[guild]['server_ignore']:
-                    entry.append(int(guild))
-                await self._set_guild_setting(int(guild), 'ignores', entry)
-            await self.settings.delete('ignores')
-
         # start the loops
         self._maintenance_loop.start()
         self._owner_checks.start()
