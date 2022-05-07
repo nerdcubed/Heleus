@@ -271,8 +271,8 @@ if __name__ == '__main__':
     # Get defaults for argparse
     help_description = os.environ.get(
         'HELEUS_HELP',
-        'Heleus, an open-source Discord bot maintained by DerpyChap, '
-        'forked from Liara by Pandentia and contributors\n'
+        'Heleus, an open-source Discord bot base maintained by DerpyChap, '
+        'forked from Liara by Cassandra and contributors\n'
         'https://github.com/nerdcubed/Heleus',
     )
     runtime_name = os.environ.get('HELEUS_NAME', 'Heleus')
