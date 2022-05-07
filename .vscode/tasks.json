@@ -4,7 +4,6 @@
         {
             "label": "Compose Up",
             "type": "docker-compose",
-            "isBackground": true,
             "dockerCompose": {
                 "up": {
                     "detached": true,
