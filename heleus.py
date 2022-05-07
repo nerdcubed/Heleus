@@ -320,7 +320,7 @@ if __name__ == '__main__':
 
     test_guilds = os.environ.get('HELEUS_TEST_GUILDS', None)
 
-    loader = os.environ.get('HELEUS_LOADER', None)
+    loader = os.environ.get('HELEUS_LOADER', 'cogs.core')
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
