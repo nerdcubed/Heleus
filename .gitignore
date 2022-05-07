@@ -7,6 +7,5 @@ logs/
 env/
 *.iml
 ffmpeg.exe
-.vscode/
 *.env
 db/
