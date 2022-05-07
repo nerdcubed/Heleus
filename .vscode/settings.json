@@ -1,0 +1,5 @@
+{
+    "python.formatting.blackPath": "blue",
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true
+}
