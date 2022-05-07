@@ -1,7 +1,5 @@
-import asyncio
 import datetime
 import inspect
-import random
 import textwrap
 import time
 import traceback
