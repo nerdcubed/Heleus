@@ -29,7 +29,7 @@ class RedisCollection:
 
     async def set(self, key, value):
         """Sets a key in the collection."""
-        await self.redis.hset(self.key, dill.dumps(key), dill.dumps(value))
+        await self.redis.hset(self.key, {dill.dumps(key): dill.dumps(value)})
 
     async def delete(self, key):
         """Removes a key. Does nothing if the key doesn't exist."""
