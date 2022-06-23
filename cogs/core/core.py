@@ -102,15 +102,6 @@ class Core(commands.Cog):
             if cog not in cogs:
                 self.heleus.unload_extension(cog)
 
-    async def _get_guild_setting(self, guild_id, attribute, default=None):
-        guild = await self.settings.get(f'guilds:{guild_id}', {})
-        return guild.get(attribute, default)
-
-    async def _set_guild_setting(self, guild_id, attribute, value):
-        guild = await self.settings.get(f'guilds:{guild_id}', {})
-        guild[attribute] = value
-        await self.settings.set(f'guilds:{guild_id}', guild)
-
     @tasks.loop(count=1)
     async def _post(self):
         """Power-on self test. Beep boop."""
@@ -169,44 +160,6 @@ class Core(commands.Cog):
         if not self.ignore_db:
             # Loading cogs / Unloading cogs
             await self._cog_loop()
-
-    async def _ignore_overrides(self, message):
-        if isinstance(message.author, discord.Member):
-            if not self.heleus.intents.guilds:
-                self.logger.warning(
-                    'guilds intent is not available! Cannot check ignore_overrides.'
-                )
-                return
-            if message.guild.owner == message.author:
-                return True
-            try:
-                roles = {x.name.lower() for x in message.author.roles}
-                settings = await self._get_guild_setting(
-                    message.guild.id, 'roles', {}
-                )
-                admin = settings.get('admin')
-                if admin in roles:
-                    return True
-            except KeyError or AttributeError:
-                pass
-
-    async def _ignore_preconditions(self, message):
-        if isinstance(message.author, discord.Member):
-            if not self.heleus.intents.guilds:
-                self.logger.warning(
-                    'guilds intent is not available! Cannot check ignore_preconditions.'
-                )
-                return
-            ignores = await self._get_guild_setting(
-                message.guild.id, 'ignores', []
-            )
-
-            if message.author.id in ignores:
-                return False
-            if message.channel.id in ignores:
-                return False
-            if message.guild.id in ignores:
-                return False
 
     async def create_haste(self, content):
         async with aiohttp.ClientSession() as session:
