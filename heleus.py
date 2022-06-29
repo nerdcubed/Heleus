@@ -446,8 +446,10 @@ if __name__ == '__main__':
     logger = logging.getLogger('heleus')
     if cargs.debug:
         logger.setLevel(logging.DEBUG)
+        sync_commands_debug = True
     else:
         logger.setLevel(logging.INFO)
+        sync_commands_debug = False
 
     if not cargs.stateless:
         handler = logging.FileHandler(f'logs/heleus_{now}.log')
@@ -534,6 +536,7 @@ if __name__ == '__main__':
         load_cogs=cargs.cogs,
         intents=intents,
         test_guilds=test_guilds,
+        sync_commands_debug=sync_commands_debug,
         shard_id=cargs.shard_id,
         shard_count=cargs.shard_count,
         description=cargs.description,
