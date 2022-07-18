@@ -14,7 +14,7 @@ strictyaml = "^1.6.1"
 tabulate = "^0.8.10"
 psutil = "^5.9.1"
 disnake = {extras = ["voice"], version = "^2.5.1"}
-coredis = {extras = ["hiredis"], version = "^3.757"}
+coredis = {extras = ["hiredis"], version = "^4.0"}
 
 [tool.poetry.dev-dependencies]
 
