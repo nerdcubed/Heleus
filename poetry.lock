@@ -46,10 +46,10 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [package.extras]
-dev = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "zope.interface", "furo", "sphinx", "sphinx-notfound-page", "pre-commit", "cloudpickle"]
-docs = ["furo", "sphinx", "zope.interface", "sphinx-notfound-page"]
-tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "zope.interface", "cloudpickle"]
-tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "cloudpickle"]
+dev = ["cloudpickle", "coverage[toml] (>=5.0.2)", "furo", "hypothesis", "mypy", "pre-commit", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "six", "sphinx", "sphinx-notfound-page", "zope.interface"]
+docs = ["furo", "sphinx", "sphinx-notfound-page", "zope.interface"]
+tests = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "six", "zope.interface"]
+tests_no_zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "six"]
 
 [[package]]
 name = "cffi"
@@ -75,7 +75,7 @@ unicode_backport = ["unicodedata2"]
 
 [[package]]
 name = "coredis"
-version = "4.5.5"
+version = "4.5.6"
 description = "Python async client for Redis key-value store"
 category = "main"
 optional = false
@@ -100,7 +100,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 wrapt = ">=1.10,<2"
 
 [package.extras]
-dev = ["tox", "bump2version (<1)", "sphinx (<2)", "importlib-metadata (<3)", "importlib-resources (<4)", "configparser (<5)", "sphinxcontrib-websupport (<2)", "zipp (<2)", "PyTest (<5)", "PyTest-Cov (<2.6)", "pytest", "pytest-cov"]
+dev = ["PyTest (<5)", "PyTest-Cov (<2.6)", "bump2version (<1)", "configparser (<5)", "importlib-metadata (<3)", "importlib-resources (<4)", "pytest", "pytest-cov", "sphinx (<2)", "sphinxcontrib-websupport (<2)", "tox", "zipp (<2)"]
 
 [[package]]
 name = "dill"
@@ -127,8 +127,8 @@ PyNaCl = {version = ">=1.3.0,<1.5", optional = true, markers = "extra == \"voice
 
 [package.extras]
 discord = ["discord-disnake"]
-docs = ["sphinx (>=4.4.0,<4.5.0)", "sphinxcontrib-trio (==1.1.2)", "sphinx-hoverxref (>=1.0.0,<1.1.0)", "sphinx-autobuild (==2021.3.14)"]
-speed = ["orjson (>=3.5.4)", "aiodns (>=1.1)", "brotli", "cchardet"]
+docs = ["sphinx (>=4.4.0,<4.5.0)", "sphinx-autobuild (==2021.3.14)", "sphinx-hoverxref (>=1.0.0,<1.1.0)", "sphinxcontrib-trio (==1.1.2)"]
+speed = ["aiodns (>=1.1)", "brotli", "cchardet", "orjson (>=3.5.4)"]
 voice = ["PyNaCl (>=1.3.0,<1.5)"]
 
 [[package]]
@@ -175,7 +175,7 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [package.extras]
-test = ["ipaddress", "mock", "enum34", "pywin32", "wmi"]
+test = ["enum34", "ipaddress", "mock", "pywin32", "wmi"]
 
 [[package]]
 name = "pycparser"
@@ -207,7 +207,7 @@ six = "*"
 
 [package.extras]
 docs = ["sphinx (>=1.6.5)", "sphinx-rtd-theme"]
-tests = ["pytest (>=3.2.1,!=3.3.0)", "hypothesis (>=3.27.0)"]
+tests = ["hypothesis (>=3.27.0)", "pytest (>=3.2.1,!=3.3.0)"]
 
 [[package]]
 name = "pyparsing"
@@ -218,7 +218,7 @@ optional = false
 python-versions = ">=3.6.8"
 
 [package.extras]
-diagrams = ["railroad-diagrams", "jinja2"]
+diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "python-dateutil"
@@ -241,7 +241,7 @@ python-versions = "*"
 
 [package.extras]
 flask = ["Flask (>=0.8)", "blinker (>=1.1)"]
-tests = ["bottle", "celery (>=2.5)", "coverage (<4)", "exam (>=0.5.2)", "flake8 (==3.5.0)", "logbook", "mock", "nose", "pytz", "pytest (>=3.2.0,<3.3.0)", "pytest-timeout (==1.2.1)", "pytest-xdist (==1.18.2)", "pytest-pythonpath (==0.7.2)", "pytest-cov (==2.5.1)", "pytest-flake8 (==1.0.0)", "requests", "tornado (>=4.1,<5.0)", "tox", "webob", "webtest", "wheel", "anyjson", "zconfig", "Flask (>=0.8)", "blinker (>=1.1)", "Flask-Login (>=0.2.0)", "blinker (>=1.1)", "sanic (>=0.7.0)", "aiohttp"]
+tests = ["Flask (>=0.8)", "Flask-Login (>=0.2.0)", "aiohttp", "anyjson", "blinker (>=1.1)", "blinker (>=1.1)", "bottle", "celery (>=2.5)", "coverage (<4)", "exam (>=0.5.2)", "flake8 (==3.5.0)", "logbook", "mock", "nose", "pytest (>=3.2.0,<3.3.0)", "pytest-cov (==2.5.1)", "pytest-flake8 (==1.0.0)", "pytest-pythonpath (==0.7.2)", "pytest-timeout (==1.2.1)", "pytest-xdist (==1.18.2)", "pytz", "requests", "sanic (>=0.7.0)", "tornado (>=4.1,<5.0)", "tox", "webob", "webtest", "wheel", "zconfig"]
 
 [[package]]
 name = "six"
@@ -290,9 +290,9 @@ optional = false
 python-versions = ">=3.7"
 
 [package.extras]
-dev = ["Cython (>=0.29.24,<0.30.0)", "pytest (>=3.6.0)", "Sphinx (>=4.1.2,<4.2.0)", "sphinxcontrib-asyncio (>=0.3.0,<0.4.0)", "sphinx-rtd-theme (>=0.5.2,<0.6.0)", "aiohttp", "flake8 (>=3.9.2,<3.10.0)", "psutil", "pycodestyle (>=2.7.0,<2.8.0)", "pyOpenSSL (>=19.0.0,<19.1.0)", "mypy (>=0.800)"]
-docs = ["Sphinx (>=4.1.2,<4.2.0)", "sphinxcontrib-asyncio (>=0.3.0,<0.4.0)", "sphinx-rtd-theme (>=0.5.2,<0.6.0)"]
-test = ["aiohttp", "flake8 (>=3.9.2,<3.10.0)", "psutil", "pycodestyle (>=2.7.0,<2.8.0)", "pyOpenSSL (>=19.0.0,<19.1.0)", "mypy (>=0.800)"]
+dev = ["Cython (>=0.29.24,<0.30.0)", "Sphinx (>=4.1.2,<4.2.0)", "aiohttp", "flake8 (>=3.9.2,<3.10.0)", "mypy (>=0.800)", "psutil", "pyOpenSSL (>=19.0.0,<19.1.0)", "pycodestyle (>=2.7.0,<2.8.0)", "pytest (>=3.6.0)", "sphinx-rtd-theme (>=0.5.2,<0.6.0)", "sphinxcontrib-asyncio (>=0.3.0,<0.4.0)"]
+docs = ["Sphinx (>=4.1.2,<4.2.0)", "sphinx-rtd-theme (>=0.5.2,<0.6.0)", "sphinxcontrib-asyncio (>=0.3.0,<0.4.0)"]
+test = ["aiohttp", "flake8 (>=3.9.2,<3.10.0)", "mypy (>=0.800)", "psutil", "pyOpenSSL (>=19.0.0,<19.1.0)", "pycodestyle (>=2.7.0,<2.8.0)"]
 
 [[package]]
 name = "wrapt"
@@ -463,25 +463,25 @@ charset-normalizer = [
     {file = "charset_normalizer-2.0.12-py3-none-any.whl", hash = "sha256:6881edbebdb17b39b4eaaa821b438bf6eddffb4468cf344f09f89def34a8b1df"},
 ]
 coredis = [
-    {file = "coredis-4.5.5-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:7c68332760451937a5a123710006469fad5ee6c1f30d6d19e581dcb0f89a9ef6"},
-    {file = "coredis-4.5.5-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:6e138156022a085d1a533a6660725dec2bc1e5d3f853dd0eb022a6f9632ec799"},
-    {file = "coredis-4.5.5-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:22439170b4933218ca6d9c0ab623598543326d2b703e2d71e2ed4f7b1ec4b0e6"},
-    {file = "coredis-4.5.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4713e3a401780245c7a1d2e57c2013362e332c58d0d2985a6dc13c7bb7524d26"},
-    {file = "coredis-4.5.5-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:8f5a58eaa0882bcfdd73d40fa9dcb2a0385b04c3f1be2aff413814478b3ca6c7"},
-    {file = "coredis-4.5.5-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:93d00038c74641797ed77907eb41b6caf7dcb29a6ec382d062db9edb9f4c416d"},
-    {file = "coredis-4.5.5-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d36d153e55b6bf23e3a4b350f464424ff5a1f9d6e2554dfa84ba0f9c232e726b"},
-    {file = "coredis-4.5.5-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:9cf67caed3ec8d039ee1fc15bc22ceb551fc0d5a28d09e49b855ed2c9da9dbe1"},
-    {file = "coredis-4.5.5-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:85e5d2cfb9d0b1a74e3027e4f80fee73cafb3bef5e26877484fb8d0aa96e9343"},
-    {file = "coredis-4.5.5-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:9052029e53ff42c6e017ce7bbc186f3e9c12a41b4892b9fba5db9dd89a61aae6"},
-    {file = "coredis-4.5.5-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:6ee6ee61857e0190f3055dbad3ee2438fb251247f00805e1bceca2c85784fec1"},
-    {file = "coredis-4.5.5-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:49f6b3ae0d535214415bd7043984b5b74da7453bc51550ece53f97e81d3d044b"},
-    {file = "coredis-4.5.5-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:ac565f9088083025411ff17b6d2dc86887a8c6d07abd2234fd5eea3021da458d"},
-    {file = "coredis-4.5.5-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:e8e1158cdce067376f519c27e3a2bc5eae37f7c15d0dd7d45debfe0c26779562"},
-    {file = "coredis-4.5.5-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:1bafbe27c684fa609aa61d68108ac4f8637e0ff5c8d9e45b5b91e2ffe09f38c5"},
-    {file = "coredis-4.5.5-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:9963f8e1ed9a9cb66e2accfcc0b52d51ea80fe319ad66b6d92fe618d06c33c8e"},
-    {file = "coredis-4.5.5-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d0f143f4b38019078f1c403ecef00a48a2b392bec1ac78b84c5a8254b698c94e"},
-    {file = "coredis-4.5.5-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c421462a5f71a8da514b86102f60bd3eb9407b3f71ed1f1523a0014da054d7c9"},
-    {file = "coredis-4.5.5.tar.gz", hash = "sha256:ce9fd5a1ccf0b34ce74e858c820b8624e397fc859bd26445a2db3dc6ebd2e4db"},
+    {file = "coredis-4.5.6-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:b4c5597e2c5504a331ac93d5d0f2db0dc3bfd27c354ad4e6f40248d01309a484"},
+    {file = "coredis-4.5.6-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:838875e2189de505605b4e81520539d442834cd5851c091cc99025207700f474"},
+    {file = "coredis-4.5.6-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:bd308f7ddbdc2b5aed0b4cf299030c5cb9990e3749a559886297d47607894bc7"},
+    {file = "coredis-4.5.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0eff7e17d5e42285843029f99b8f5bfcc9e30695a205be89b8f3f445699be112"},
+    {file = "coredis-4.5.6-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:94f9d482dae5d50bcef6aa740d79d0aab15d88eb7e93a00a5cbf4c1d4bd91c11"},
+    {file = "coredis-4.5.6-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:2cbd4b5448ff533bb9723f6945fc32ee6e51b75060d83170f2573e219c276249"},
+    {file = "coredis-4.5.6-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8fd184571bcffb750ca6a9c0e8078946bad9d25667a4f75fbdbc9b6708e9671f"},
+    {file = "coredis-4.5.6-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:a3f5af45d241850058cb5244ca51bc17ec7d6e1f64b37beb0ce246d4f5f801a3"},
+    {file = "coredis-4.5.6-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:1b464a79b03070657c92de7b72674f5685f1186e816d6fb5bb74c859c5d186c7"},
+    {file = "coredis-4.5.6-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:1eaa546900b75514a32b14292b2bab336b52d45097b7aff32480e50b644d5642"},
+    {file = "coredis-4.5.6-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:e25e7928686cbf07eeadf3230f2780ebb758c768aa37ac737aff9196d82e10c8"},
+    {file = "coredis-4.5.6-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d95a70b9e24312f34e31f482a04841503b769c3aa94b570f6ef5227255e2dbb7"},
+    {file = "coredis-4.5.6-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:631483c53412d28f5fa5b143aa3216e8f5553dc1b452f4fb476f41a55f9aa4b8"},
+    {file = "coredis-4.5.6-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:32daeb9de25f0b30d6deaed64b3eface129a3a602497f13ba1db48e639599f19"},
+    {file = "coredis-4.5.6-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:e8dcf5a0fd8dcf7bd7d39a20910067cfd80cdd5d100bf5b12e952caf2adba0e3"},
+    {file = "coredis-4.5.6-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:e524f149632505269173d53c26020a732cec9890f6438d921b6f984fe69d878a"},
+    {file = "coredis-4.5.6-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a6214f05009153514b4bc822dea1c368669a76fcfa41bc3bf7e1d7c229b6a2a6"},
+    {file = "coredis-4.5.6-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:42ce43f660b78867a42e2ace2b7555e1e452e863a60cf360c1376eb7182411a2"},
+    {file = "coredis-4.5.6.tar.gz", hash = "sha256:9ae12a85c4e494777933dea0877ac7884c6603ba8364d11ae6c7968b0e4a6eb0"},
 ]
 deprecated = [
     {file = "Deprecated-1.2.13-py2.py3-none-any.whl", hash = "sha256:64756e3e14c8c5eea9795d93c524551432a0be75629f8f29e67ab8caf076c76d"},
