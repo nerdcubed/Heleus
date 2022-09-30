@@ -115,7 +115,7 @@ graph = ["objgraph (>=1.7.2)"]
 
 [[package]]
 name = "disnake"
-version = "2.5.2"
+version = "2.6.0"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -127,8 +127,8 @@ PyNaCl = {version = ">=1.3.0,<1.5", optional = true, markers = "extra == \"voice
 
 [package.extras]
 discord = ["discord-disnake"]
-docs = ["sphinx (>=4.4.0,<4.5.0)", "sphinx-autobuild (==2021.3.14)", "sphinx-hoverxref (>=1.0.0,<1.1.0)", "sphinxcontrib-trio (==1.1.2)"]
-speed = ["Brotli", "aiodns (>=1.1)", "cchardet", "orjson (>=3.5.4)"]
+docs = ["docutils (>=0.17)", "sphinx (>=5.1.1,<5.2.0)", "sphinx-autobuild (>=2021.3,<2022.0)", "sphinx-hoverxref (==1.1.3)", "sphinxcontrib-towncrier (==0.2.1a0)", "sphinxcontrib-trio (>=1.1.2,<1.2.0)", "towncrier (==21.9.0)"]
+speed = ["Brotli", "aiodns (>=1.1)", "cchardet", "orjson (>=3.6,<4.0)"]
 voice = ["PyNaCl (>=1.3.0,<1.5)"]
 
 [[package]]
@@ -317,7 +317,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "eb7a32c8f53cf30a361602b6a631459fae5d3571ea3d6addedc1fed7be2c5cd3"
+content-hash = "c9aa0add1ec39f31a90b653ee1b3e4618641e5a4d55fc014f06f725ddb097722"
 
 [metadata.files]
 aiohttp = [
@@ -492,8 +492,8 @@ dill = [
     {file = "dill-0.3.5.1.tar.gz", hash = "sha256:d75e41f3eff1eee599d738e76ba8f4ad98ea229db8b085318aa2b3333a208c86"},
 ]
 disnake = [
-    {file = "disnake-2.5.2-py3-none-any.whl", hash = "sha256:e36faa97afce4c8caacee1c68ba08903611bbb8dd455bd95e32867a1c6b0352a"},
-    {file = "disnake-2.5.2.tar.gz", hash = "sha256:9fae801275b8ba448de9d9d3cc78b264bd5e1f9225292dad68e7b95eb5e6de68"},
+    {file = "disnake-2.6.0-py3-none-any.whl", hash = "sha256:d50c8aa7eac22bf46dd3ce1735225c7f140399343d641ffa968af5b6674c4c29"},
+    {file = "disnake-2.6.0.tar.gz", hash = "sha256:c6082b6ee57ee4d60ee8e9d1221110a384b26fa83808bede8a718ebf13cca3eb"},
 ]
 frozenlist = [
     {file = "frozenlist-1.3.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:d2257aaba9660f78c7b1d8fea963b68f3feffb1a9d5d05a18401ca9eb3e8d0a3"},
@@ -708,7 +708,6 @@ strictyaml = [
 ]
 tabulate = [
     {file = "tabulate-0.8.10-py3-none-any.whl", hash = "sha256:0ba055423dbaa164b9e456abe7920c5e8ed33fcc16f6d1b2f2d152c8e1e8b4fc"},
-    {file = "tabulate-0.8.10-py3.8.egg", hash = "sha256:436f1c768b424654fce8597290d2764def1eea6a77cfa5c33be00b1bc0f4f63d"},
     {file = "tabulate-0.8.10.tar.gz", hash = "sha256:6c57f3f3dd7ac2782770155f3adb2db0b1a269637e42f27599925e64b114f519"},
 ]
 typing-extensions = [
