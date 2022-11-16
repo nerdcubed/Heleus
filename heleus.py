@@ -11,6 +11,7 @@ import sys
 import threading
 import time
 import uuid
+import warnings
 from concurrent.futures import TimeoutError, ThreadPoolExecutor
 from hashlib import sha256
 
@@ -59,6 +60,7 @@ def create_bot(auto_shard: bool):
             self.team = None  # and this
             self.send_cmd_help = send_cmd_help
             self.send_command_help = send_cmd_help  # seems more like a method name discord.py would choose
+            self.pm_help = kwargs.pop('pm_help', None)
             db = str(self.redis.connection_pool.connection_kwargs['db'])
             self.pubsub_id = f'heleus.{db}.pubsub.code'
             self._pubsub_futures = {}  # futures temporarily stored here
@@ -69,6 +71,7 @@ def create_bot(auto_shard: bool):
                 target=self._pubsub_cache_loop,
                 daemon=True,
             )
+            load_cogs = kwargs.pop('load_cogs', None)
             if load_cogs is not None:
                 self.autoload = load_cogs.split(',')
             else:
@@ -78,11 +81,11 @@ def create_bot(auto_shard: bool):
 
             self.ready = False  # we expect the loader to set this once ready
 
-        async def init(self):
+        def init(self):
             """Initializes the bot."""
             # pubsub
             self.t1.start()
-            # self.loop.create_task(self._pubsub_loop())
+            self.loop.create_task(self._pubsub_loop())
 
             # load the core cog
             default = 'cogs.core'
@@ -175,8 +178,8 @@ def create_bot(auto_shard: bool):
         async def _pubsub_loop(self):
             pubsub = self.redis.pubsub()
             _id = self.pubsub_id
-            pubsub.subscribe(_id)
-            async for event in pubsub.listen():
+            await pubsub.subscribe(_id)
+            for event in await pubsub.listen():
                 self._pubsub_pool.submit(self._process_pubsub_event, event)
 
         def _pubsub_cache_loop(self):
@@ -519,7 +522,7 @@ if __name__ == '__main__':
         cargs.shard_id -= 1
 
     # Redis connection attempt
-    redis_conn = coredis.StrictRedis(
+    redis_conn = coredis.Redis(
         host=cargs.host, port=cargs.port, db=cargs.db, password=cargs.password
     )
 
@@ -530,13 +533,19 @@ if __name__ == '__main__':
 
     heleus_cls = create_bot(unsharded)
 
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', DeprecationWarning)
+        loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+
     # if we want to make an auto-reboot loop now, it would be a hell of a lot easier now
     # noinspection PyUnboundLocalVariable
     heleus = heleus_cls(
         load_cogs=cargs.cogs,
         intents=intents,
         test_guilds=test_guilds,
-        sync_commands_debug=sync_commands_debug,
+        command_sync_flags=commands.CommandSyncFlags(
+            sync_commands_debug=sync_commands_debug
+        ),
         shard_id=cargs.shard_id,
         shard_count=cargs.shard_count,
         description=cargs.description,
@@ -547,19 +556,19 @@ if __name__ == '__main__':
         test=cargs.test,
         name=cargs.name,
         loader=loader,
+        command_prefix=commands.when_mentioned,
+        loop=loop,
     )  # heleus-specific args
 
     async def run_bot():
         await heleus.redis.ping()
-        await heleus.init()
-        await heleus.login(cargs.token)
-        await heleus.connect()
+        heleus.init()
+        await heleus.start(cargs.token)
 
     # noinspection PyBroadException
     def run_app():
         # TODO: This is depreciated but the alternative causes
         # wait_until_ready() to block indefinitely so idk what to do lol
-        loop = asyncio.get_event_loop()
 
         exit_code = 0
         try:

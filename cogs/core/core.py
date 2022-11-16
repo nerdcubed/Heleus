@@ -31,12 +31,8 @@ class Core(commands.Cog):
         self.settings = RedisCollection(self.heleus.redis, 'settings')
         self.logger = self.heleus.logger
         self._post.start()
-        self.global_preconditions = [
-            self._ignore_preconditions
-        ]  # preconditions to message processing
-        self.global_preconditions_overrides = [
-            self._ignore_overrides
-        ]  # overrides to the preconditions
+        self.global_preconditions = []  # preconditions to message processing
+        self.global_preconditions_overrides = []  # overrides to the preconditions
         self._eval = {}
         self.haste_url = os.environ.get(
             'HELEUS_HASTE_URL', 'https://hastebin.com'
@@ -106,10 +102,9 @@ class Core(commands.Cog):
     @tasks.loop(count=1)
     async def _post(self):
         """Power-on self test. Beep boop."""
+        await self.heleus.redis.ping()
         self.heleus.owners = []
 
-        # set prefix
-        self.heleus.command_prefix = commands.when_mentioned
         self.logger.info(
             f'Run legacy commands by mentioning {self.heleus.name}'
         )
