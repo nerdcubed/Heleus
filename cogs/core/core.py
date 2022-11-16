@@ -5,6 +5,7 @@ import time
 import traceback
 import os
 import pkgutil
+import io
 
 import aiohttp
 import disnake as discord
@@ -246,6 +247,86 @@ class Core(commands.Cog):
                 self.global_preconditions.remove(precondition)
 
         await self.heleus.process_commands(message)
+    
+    @commands.Cog.listener()
+    async def on_slash_command_error(self, inter, exception):
+        # TODO: Ignore if command already has its own error handler
+        response = None
+        attachment = None
+        try:
+            match exception:
+                case commands.CommandInvokeError():
+                    exception = exception.original
+
+                    if isinstance(exception, discord.Forbidden) and not checks.owner_check(inter):
+                        response = "I don't have permission to perform the action you requested."
+                    else:
+                        error = (
+                            f'`{type(exception).__name__}` in command `{inter.command.qualified_name}`: '
+                            f'```py\n{self.get_traceback(exception)}\n```'
+                        )
+                        if inter.guild:
+                            guild_id = inter.guild.id
+                        else:
+                            guild_id = None
+                        
+                        description = None
+                        match inter.application_command.body:
+                            case discord.SlashCommand():
+                                command_type = 'SlashCommand'
+                                description = inter.application_command.body.description
+                            case discord.MessageCommand():
+                                command_type = 'MessageCommand'
+                            case discord.UserCommand():
+                                command_type = 'UserCommand'
+                            case unknown:
+                                command_type = f'Unknown ({unknown})'
+
+                        detail = {
+                            'guild_id': guild_id,
+                            'user_id': inter.author.id,
+                            'channel_id': inter.channel.id,
+                            'command': {
+                                'name': inter.application_command.name,
+                                'qualified_name': inter.command.qualified_name,
+                                'type': command_type,
+                                'hidden': False,
+                                'description': description,
+                                'aliases': None,
+                            },
+                            'message': {
+                                'id': inter.message.id,
+                                'content': None,
+                            },
+                            'exception': {
+                                'type': type(exception).__name__,
+                                'traceback': self.get_traceback(exception),
+                            },
+                        }
+                        self.logger.error(
+                            f'An exception occurred in the command {inter.command.qualified_name}:'
+                            f'\n{self.get_traceback(exception)}',
+                            exc_info=detail,
+                        )
+                        if checks.owner_check(inter):
+                            if len(error) > 2048:
+                                response = f'`{type(exception).__name__}` in command `{inter.command.qualified_name}`'
+                                attachment = self.get_traceback(exception)
+                            response = error
+                        else:
+                            response = 'An error occured while running that command.'
+                case commands.CommandOnCooldown():
+                    response = 'That command is cooling down.'
+                case commands.CheckFailure():
+                    response = 'You don\'t have access to that command.'
+                case commands.DisabledCommand():
+                    response = 'That command is disabled.'
+            if response:
+                if attachment:
+                    attachment = io.StringIO(attachment)
+                await inter.send(response, file=attachment)
+        except discord.HTTPException:
+            pass
 
     @commands.Cog.listener()
     async def on_command_error(self, context, exception):
