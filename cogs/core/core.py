@@ -248,6 +248,7 @@ class Core(commands.Cog):
         # TODO: Ignore if command already has its own error handler
         response = None
         attachment = None
+        ephemeral = True
         try:
             match exception:
                 case commands.CommandInvokeError():
@@ -255,9 +256,10 @@ class Core(commands.Cog):
 
                     if isinstance(exception, discord.Forbidden) and not checks.owner_check(inter):
                         response = "I don't have permission to perform the action you requested."
+                        ephemeral = False
                     else:
                         error = (
-                            f'`{type(exception).__name__}` in command `{inter.command.qualified_name}`: '
+                            f'`{type(exception).__name__}` in command `{inter.application_command.qualified_name}`: '
                             f'```py\n{self.get_traceback(exception)}\n```'
                         )
                         if inter.guild:
@@ -283,15 +285,11 @@ class Core(commands.Cog):
                             'channel_id': inter.channel.id,
                             'command': {
                                 'name': inter.application_command.name,
-                                'qualified_name': inter.command.qualified_name,
+                                'qualified_name': inter.application_command.qualified_name,
                                 'type': command_type,
                                 'hidden': False,
                                 'description': description,
                                 'aliases': None,
-                            },
-                            'message': {
-                                'id': inter.message.id,
-                                'content': None,
                             },
                             'exception': {
                                 'type': type(exception).__name__,
@@ -299,17 +297,18 @@ class Core(commands.Cog):
                             },
                         }
                         self.logger.error(
-                            f'An exception occurred in the command {inter.command.qualified_name}:'
+                            f'An exception occurred in the command {inter.application_command.qualified_name}:'
                             f'\n{self.get_traceback(exception)}',
                             exc_info=detail,
                         )
                         if checks.owner_check(inter):
                             if len(error) > 2048:
-                                response = f'`{type(exception).__name__}` in command `{inter.command.qualified_name}`'
+                                response = f'`{type(exception).__name__}` in command `{inter.application_command.qualified_name}`'
                                 attachment = self.get_traceback(exception)
                             response = error
                         else:
                             response = 'An error occured while running that command.'
+                            ephemeral = False
                 case commands.CommandOnCooldown():
                     response = 'That command is cooling down.'
                 case commands.CheckFailure():
@@ -318,8 +317,10 @@ class Core(commands.Cog):
                     response = 'That command is disabled.'
             if response:
                 if attachment:
-                    attachment = io.StringIO(attachment)
-                await inter.send(response, file=attachment)
+                    attachment = discord.File(io.StringIO(attachment), 'error.log')
+                    await inter.send(response, file=attachment, ephemeral=ephemeral)
+                else:
+                    await inter.send(response, ephemeral=ephemeral)
         except discord.HTTPException:
             pass
 
