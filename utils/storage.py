@@ -33,7 +33,7 @@ class RedisCollection:
 
     async def delete(self, key):
         """Removes a key. Does nothing if the key doesn't exist."""
-        await self.redis.hdel(self.key, dill.dumps(key))
+        await self.redis.hdel(self.key, [dill.dumps(key)])
 
     async def keys(self) -> typing.List[typing.Any]:
         """Lists all keys."""
