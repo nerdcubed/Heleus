@@ -32,7 +32,9 @@ class Core(commands.Cog):
         self.logger = self.heleus.logger
         self._post.start()
         self.global_preconditions = []  # preconditions to message processing
-        self.global_preconditions_overrides = []  # overrides to the preconditions
+        self.global_preconditions_overrides = (
+            []
+        )  # overrides to the preconditions
         self._eval = {}
         self.haste_url = os.environ.get(
             'HELEUS_HASTE_URL', 'https://hastebin.com'
@@ -88,7 +90,8 @@ class Core(commands.Cog):
                     cogs.remove(cog)
                     edited = True
                     self.logger.warning(
-                        f'{repr(cog)} could not be loaded. This message will not be shown again.'
+                        f'{repr(cog)} could not be loaded. This message will not be shown again. '
+                        f'Full traceback:\n{traceback.format_exc()}'
                     )
         if edited:
             await self.settings.set('cogs', cogs)
@@ -242,7 +245,7 @@ class Core(commands.Cog):
                 self.global_preconditions.remove(precondition)
 
         await self.heleus.process_commands(message)
-    
+
     @commands.Cog.listener()
     async def on_slash_command_error(self, inter, exception):
         # TODO: Ignore if command already has its own error handler
@@ -254,7 +257,9 @@ class Core(commands.Cog):
                 case commands.CommandInvokeError():
                     exception = exception.original
 
-                    if isinstance(exception, discord.Forbidden) and not checks.owner_check(inter):
+                    if isinstance(
+                        exception, discord.Forbidden
+                    ) and not checks.owner_check(inter):
                         response = "I don't have permission to perform the action you requested."
                         ephemeral = False
                     else:
@@ -266,12 +271,14 @@ class Core(commands.Cog):
                             guild_id = inter.guild.id
                         else:
                             guild_id = None
-                        
+
                         description = None
                         match inter.application_command.body:
                             case discord.SlashCommand():
                                 command_type = 'SlashCommand'
-                                description = inter.application_command.body.description
+                                description = (
+                                    inter.application_command.body.description
+                                )
                             case discord.MessageCommand():
                                 command_type = 'MessageCommand'
                             case discord.UserCommand():
@@ -307,18 +314,24 @@ class Core(commands.Cog):
                                 attachment = self.get_traceback(exception)
                             response = error
                         else:
-                            response = 'An error occured while running that command.'
+                            response = (
+                                'An error occured while running that command.'
+                            )
                             ephemeral = False
                 case commands.CommandOnCooldown():
                     response = 'That command is cooling down.'
                 case commands.CheckFailure():
-                    response = 'You don\'t have access to that command.'
+                    response = "You don't have access to that command."
                 case commands.DisabledCommand():
                     response = 'That command is disabled.'
             if response:
                 if attachment:
-                    attachment = discord.File(io.StringIO(attachment), 'error.log')
-                    await inter.send(response, file=attachment, ephemeral=ephemeral)
+                    attachment = discord.File(
+                        io.StringIO(attachment), 'error.log'
+                    )
+                    await inter.send(
+                        response, file=attachment, ephemeral=ephemeral
+                    )
                 else:
                     await inter.send(response, ephemeral=ephemeral)
         except discord.HTTPException:
