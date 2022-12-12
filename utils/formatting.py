@@ -1,5 +1,6 @@
 import unicodedata
-from disnake import commands, ApplicationCommandType
+from disnake import ApplicationCommandType
+from disnake.ext import commands
 from disnake.utils import format_dt
 
 
