@@ -549,6 +549,7 @@ if __name__ == '__main__':
         shard_id=cargs.shard_id,
         shard_count=cargs.shard_count,
         description=cargs.description,
+        help_command=None,
         pm_help=None,
         max_messages=message_cache,
         redis=redis_conn,
