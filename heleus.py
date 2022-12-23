@@ -35,6 +35,16 @@ class NoResponse:
             return False
 
 
+# We'll be disabling the help command later, so best to remove the ending note
+# mentioning it for when `send_cmd_help` is called
+class CustomHelp(commands.DefaultHelpCommand):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get_ending_note(self):
+        return None
+
+
 def create_bot(auto_shard: bool):
     cls = commands.AutoShardedBot if auto_shard else commands.Bot
 
@@ -548,6 +558,7 @@ if __name__ == '__main__':
         shard_id=cargs.shard_id,
         shard_count=cargs.shard_count,
         description=cargs.description,
+        help_command=CustomHelp(),
         pm_help=None,
         max_messages=message_cache,
         redis=redis_conn,
