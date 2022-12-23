@@ -59,7 +59,7 @@ def create_bot(auto_shard: bool):
             self.invite_url = None  # this too
             self.team = None  # and this
             self.send_cmd_help = send_cmd_help
-            self.send_command_help = send_cmd_help  # seems more like a method name discord.py would choose
+            self.send_command_help = send_cmd_help
             self.pm_help = kwargs.pop('pm_help', None)
             db = str(self.redis.connection_pool.connection_kwargs['db'])
             self.pubsub_id = f'heleus.{db}.pubsub.code'
@@ -537,7 +537,6 @@ if __name__ == '__main__':
         warnings.simplefilter('ignore', DeprecationWarning)
         loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 
-    # if we want to make an auto-reboot loop now, it would be a hell of a lot easier now
     # noinspection PyUnboundLocalVariable
     heleus = heleus_cls(
         load_cogs=cargs.cogs,
@@ -549,7 +548,6 @@ if __name__ == '__main__':
         shard_id=cargs.shard_id,
         shard_count=cargs.shard_count,
         description=cargs.description,
-        help_command=None,
         pm_help=None,
         max_messages=message_cache,
         redis=redis_conn,
@@ -561,6 +559,10 @@ if __name__ == '__main__':
         loop=loop,
     )  # heleus-specific args
 
+    # Removing the help command here instead of using `help_command=None` in the bot
+    # definition ensures that `send_cmd_help` can still function as expected
+    heleus.remove_command('help')
+
     async def run_bot():
         await heleus.redis.ping()
         heleus.init()
@@ -568,8 +570,6 @@ if __name__ == '__main__':
 
     # noinspection PyBroadException
     def run_app():
-        # TODO: This is depreciated but the alternative causes
-        # wait_until_ready() to block indefinitely so idk what to do lol
 
         exit_code = 0
         try:
