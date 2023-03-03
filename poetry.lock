@@ -323,14 +323,14 @@ graph = ["objgraph (>=1.7.2)"]
 
 [[package]]
 name = "disnake"
-version = "2.8.0"
+version = "2.8.1"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "disnake-2.8.0-py3-none-any.whl", hash = "sha256:e49ea2ebc9f745ca60f8061e0c2adc32165e5edd869529994148b81ca8a0aa08"},
-    {file = "disnake-2.8.0.tar.gz", hash = "sha256:08f832b48b9fb70bf3bf710f6b798ae3f12081763bcd4f6f6f991c958d201dc2"},
+    {file = "disnake-2.8.1-py3-none-any.whl", hash = "sha256:54864c115107157c6fadeb6b5811bc73fdcaab1e71c00a3ef757560df3d49128"},
+    {file = "disnake-2.8.1.tar.gz", hash = "sha256:b05cdd1d0adbb06bc0f97906e6b9f0de58d7772bfa675c3866cd965fa5b2767a"},
 ]
 
 [package.dependencies]
@@ -904,4 +904,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "8574ed9123a92f4e99a630d76569184012f9f7ce71f139790dfed674a85f10db"
+content-hash = "75e98a5c66e14386be89ba61612eabdb010754cffa226265d512142beb72f38f"
