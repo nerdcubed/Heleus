@@ -675,13 +675,14 @@ files = [
 
 [[package]]
 name = "strictyaml"
-version = "1.6.2"
+version = "1.7.3"
 description = "Strict, typed YAML parser"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7.0"
 files = [
-    {file = "strictyaml-1.6.2.tar.gz", hash = "sha256:70cd55980fe2929dc038924ca08f68f96148223a8777810fa616e3478ebe71ca"},
+    {file = "strictyaml-1.7.3-py3-none-any.whl", hash = "sha256:fb5c8a4edb43bebb765959e420f9b3978d7f1af88c80606c03fb420888f5d1c7"},
+    {file = "strictyaml-1.7.3.tar.gz", hash = "sha256:22f854a5fcab42b5ddba8030a0e4be51ca89af0267961c8d6cfa86395586c407"},
 ]
 
 [package.dependencies]
@@ -909,4 +910,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "2836d0596f4265b5115aa08671dd59e76efdd70afa41ec87ebe9da1a8c71bfd0"
+content-hash = "56f46d419795eba15a2414deb1758c43f2b54575a72944643f646fcc453fa626"
