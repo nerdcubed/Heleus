@@ -79,4 +79,4 @@ jobs:
     steps:
       - uses: fastify/github-action-merge-dependabot@v3
         with:
-          github-token: ${{ secrets.N3BOT_PAT }}
+          github-token: ${{ secrets.GH_PAT }}
