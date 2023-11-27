@@ -1,14 +1,14 @@
-FROM python:3.12-buster
+FROM python:3.12-slim-bookworm
 
 RUN adduser --disabled-password --disabled-login --gecos '' python
 WORKDIR /app
 
 ENV SODIUM_INSTALL=system
 
-COPY pyproject.toml pyproject.toml
-COPY poetry.lock poetry.lock
+COPY --chown=python:python pyproject.toml pyproject.toml
+COPY --chown=python:python poetry.lock poetry.lock
 
-RUN apt update && apt -y install libffi-dev libsodium-dev && \
+RUN apt update && apt -y install libffi-dev libsodium-dev build-essential && \
     pip3 install -U pip poetry && \
     poetry config virtualenvs.create false && \
     poetry install && \

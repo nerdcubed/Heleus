@@ -9,3 +9,4 @@ env/
 ffmpeg.exe
 *.env
 db/
+.DS_Store
