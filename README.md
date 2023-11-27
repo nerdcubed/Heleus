@@ -1,7 +1,7 @@
 # Heleus
 ##### A Discord bot forked from [Liara](https://github.com/Thessia/Liara) originally by Cassandra and contributors
 
-[![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://python.org) ![Docker Build](https://github.com/nerdcubed/Heleus/workflows/Docker%20Build/badge.svg)
+[![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://python.org) ![Docker Build](https://github.com/nerdcubed/Heleus/workflows/Docker%20Build/badge.svg)
 ## So, what is it?
 Heleus is a fork of [Liara](https://github.com/Thessia/Liara), and serves the same purpose of providing a framework to build modular Discord bots from.
 
