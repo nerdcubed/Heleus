@@ -9,7 +9,7 @@ class _Nonexistant:
 
 
 class RedisCollection:
-    __slots__ = ('redis', 'key')
+    __slots__ = ("redis", "key")
 
     def __init__(self, redis: coredis.Redis, key):
         self.redis = redis

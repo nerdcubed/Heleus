@@ -33,13 +33,13 @@ class Paginator:
         self._message = None
         self._client = ctx.bot
 
-        self.footer = 'Page {} of {}'
+        self.footer = "Page {} of {}"
         self.navigation = {
-            '\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}': self.first_page,
-            '\N{BLACK LEFT-POINTING TRIANGLE}': self.previous_page,
-            '\N{BLACK RIGHT-POINTING TRIANGLE}': self.next_page,
-            '\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}': self.last_page,
-            '\N{BLACK SQUARE FOR STOP}': self.stop,
+            "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}": self.first_page,
+            "\N{BLACK LEFT-POINTING TRIANGLE}": self.previous_page,
+            "\N{BLACK RIGHT-POINTING TRIANGLE}": self.next_page,
+            "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}": self.last_page,
+            "\N{BLACK SQUARE FOR STOP}": self.stop,
         }
 
         self._page = None
@@ -47,9 +47,7 @@ class Paginator:
     async def begin(self):
         """Starts pagination"""
         self._stopped = False
-        self._embed = discord.Embed(
-            description='Please wait, pages are loading...'
-        )
+        self._embed = discord.Embed(description="Please wait, pages are loading...")
         self._message = await self.target.send(embed=self._embed)
         for button in self.navigation:
             await self._message.add_reaction(button)
@@ -57,7 +55,7 @@ class Paginator:
         while not self._stopped:
             try:
                 reaction, user = await self._client.wait_for(
-                    'reaction_add', check=self.predicate, timeout=self.timeout
+                    "reaction_add", check=self.predicate, timeout=self.timeout
                 )
             except asyncio.TimeoutError:
                 await self.stop(delete=self.delete_msg_timeout)
@@ -91,15 +89,11 @@ class Paginator:
             await self._message.clear_reactions()
         except discord.Forbidden:
             for button in self.navigation:
-                await self._message.remove_reaction(
-                    button, self._message.author
-                )
+                await self._message.remove_reaction(button, self._message.author)
 
     async def format_page(self):
         self._embed.description = self.pages[self._page]
-        self._embed.set_footer(
-            text=self.footer.format(self._page + 1, len(self.pages))
-        )
+        self._embed.set_footer(text=self.footer.format(self._page + 1, len(self.pages)))
         await self._message.edit(embed=self._embed)
 
     async def first_page(self):
@@ -126,7 +120,7 @@ class Paginator:
 class ListPaginator(Paginator):
     def __init__(self, ctx, _list: list, per_page=10, **kwargs):
         pages = []
-        page = ''
+        page = ""
         c = 0
         l = len(_list)
         for i in _list:
@@ -134,12 +128,12 @@ class ListPaginator(Paginator):
                 break
             if c % per_page == 0 and page:
                 pages.append(page.strip())
-                page = ''
-            page += f'{c+1}. {i}\n'
+                page = ""
+            page += f"{c + 1}. {i}\n"
 
             c += 1
         pages.append(page.strip())
         # shut up, IDEA
         # noinspection PyArgumentList
         super().__init__(ctx, pages, **kwargs)
-        self.footer += f' ({l} entries)'
+        self.footer += f" ({l} entries)"

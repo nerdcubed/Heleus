@@ -8,8 +8,8 @@ def owner_check(ctx):
 
 async def role_check(ctx, _role):
     roles = {x.id for x in ctx.author.roles}
-    settings = await ctx.bot.settings.get(f'guilds:{ctx.guild.id}', {})
-    role_settings = settings.get('roles', {})
+    settings = await ctx.bot.settings.get(f"guilds:{ctx.guild.id}", {})
+    role_settings = settings.get("roles", {})
     role = role_settings.get(_role)
     return role in roles
 
@@ -81,9 +81,9 @@ def mod_or_permissions(**permissions):
             return False
         if ctx.author == ctx.guild.owner:
             return True
-        if await role_check(ctx, 'mod'):
+        if await role_check(ctx, "mod"):
             return True
-        if await role_check(ctx, 'admin'):
+        if await role_check(ctx, "admin"):
             return True
         if permission_check(ctx, **permissions):
             return True
@@ -102,7 +102,7 @@ def admin_or_permissions(**permissions):
             return False
         if ctx.author == ctx.guild.owner:
             return True
-        if await role_check(ctx, 'admin'):
+        if await role_check(ctx, "admin"):
             return True
         if permission_check(ctx, **permissions):
             return True

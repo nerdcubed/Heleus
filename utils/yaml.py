@@ -1,22 +1,23 @@
-import strictyaml
-import os
 import errno
 import logging
+import os
 
-logger = logging.getLogger('heleus')
+import strictyaml
 
-folder = os.environ.get('HELEUS_CONFIG', 'config')
+logger = logging.getLogger("heleus")
+
+folder = os.environ.get("HELEUS_CONFIG", "config")
 
 
 def get(file: str, schema: strictyaml.Map = None):
-    path = f'{folder}/{file}'
+    path = f"{folder}/{file}"
     if not os.path.exists(path):
-        path += '.yml'
+        path += ".yml"
     if not os.path.exists(path):
         raise FileNotFoundError(
-            errno.ENOENT, os.strerror(errno.ENOENT), f'{folder}/{file}'
+            errno.ENOENT, os.strerror(errno.ENOENT), f"{folder}/{file}"
         )
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         return strictyaml.load(f.read(), schema).data
 
 
@@ -26,5 +27,5 @@ def get_safe(file: str, schema: strictyaml.Map = None):
     except FileNotFoundError:
         return None
     except Exception:
-        logger.exception(f'Failed to parse help file: {file}')
+        logger.exception(f"Failed to parse help file: {file}")
         return None
