@@ -1,11 +1,19 @@
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "daily"
+    - package-ecosystem: "pip"
+      directory: "/"
+      schedule:
+          interval: "daily"
+      groups:
+          python:
+              patterns:
+                  - "*"
 
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "daily"
+    - package-ecosystem: "docker"
+      directory: "/"
+      schedule:
+          interval: "daily"
+      groups:
+          docker:
+              patterns:
+                  - "*"
