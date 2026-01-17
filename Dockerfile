@@ -11,7 +11,7 @@ COPY --chown=python:python poetry.lock poetry.lock
 RUN apt update && apt -y install libffi-dev libsodium-dev build-essential && \
     pip3 install -U pip poetry && \
     poetry config virtualenvs.create false && \
-    poetry install && \
+    poetry install --no-root && \
     rm -rf /var/lib/apt/lists/*
 
 RUN chown -R python:python /app
