@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-uvloop = "^0.21.0"
+uvloop = "^0.22.1"
 dill = "^0.3.9"
 raven = "^6.10.0"
 strictyaml = "^1.7.3"
