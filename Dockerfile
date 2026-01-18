@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bookworm
+FROM python:3.14-slim-bookworm
 
 RUN adduser --disabled-password --disabled-login --gecos '' python
 WORKDIR /app
@@ -9,7 +9,8 @@ COPY --chown=python:python pyproject.toml pyproject.toml
 COPY --chown=python:python poetry.lock poetry.lock
 
 RUN apt update && apt -y install libffi-dev libsodium-dev build-essential && \
-    pip3 install -U pip poetry packaging && \
+    pip3 install -U pip setuptools && \
+    pip3 install -U poetry packaging && \
     poetry config virtualenvs.create false && \
     poetry install --no-root && \
     rm -rf /var/lib/apt/lists/*

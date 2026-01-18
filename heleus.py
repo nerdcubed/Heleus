@@ -401,16 +401,6 @@ if __name__ == "__main__":
     if cargs.token is None:
         exit(parser.print_usage())
 
-    if cargs.uvloop:
-        try:
-            # noinspection PyUnresolvedReferences
-            import uvloop
-
-            asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-        except ImportError:
-            print("uvloop is not installed!")
-            exit(1)
-
     if not cargs.stateless:
         # Logging starts here
         # Create directory for logs if it doesn't exist
@@ -525,7 +515,17 @@ if __name__ == "__main__":
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
-        loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
+        if cargs.uvloop:
+            try:
+                # noinspection PyUnresolvedReferences
+                import uvloop
+
+                loop: asyncio.AbstractEventLoop = uvloop.new_event_loop()
+            except ImportError:
+                print("uvloop is not installed!")
+                exit(1)
+        else:
+            loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
     # noinspection PyUnboundLocalVariable
@@ -582,6 +582,6 @@ if __name__ == "__main__":
             loop.run_until_complete(heleus.close())
         finally:
             loop.close()
-            return exit_code
+        return exit_code
 
     exit(run_app())
