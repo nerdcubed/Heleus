@@ -14,7 +14,7 @@ def strip_zerowidth(text: str) -> str:
     Returns
     -------
     str
-        The stripped text.
+        The stripped text."""
     for c in ["\ufeff", "\u200d", "\u200c", "\u200b"]:
         text = text.replace(c, "")
     return text
@@ -84,4 +84,3 @@ class CommandFormatter:
             return f"`/{name}`"
         if command:
             return f"</{name}:{command.id}>"
-            return f'</{name}:{command.id}>'
