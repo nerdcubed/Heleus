@@ -9,7 +9,7 @@ COPY --chown=python:python pyproject.toml pyproject.toml
 COPY --chown=python:python poetry.lock poetry.lock
 
 RUN apt update && apt -y install libffi-dev libsodium-dev build-essential && \
-    pip3 install -U pip poetry && \
+    pip3 install -U pip poetry packaging && \
     poetry config virtualenvs.create false && \
     poetry install --no-root && \
     rm -rf /var/lib/apt/lists/*
