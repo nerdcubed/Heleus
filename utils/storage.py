@@ -22,18 +22,20 @@ class RedisCollection:
 
     async def get(self, key, default=None) -> typing.Any:
         """Gets a key from the collection."""
-        out = await self.redis.hget(self.key, dill.dumps(key))
+        out = await self.redis.hget(self.key, dill.dumps(key, protocol=4))
         if out is None:
             return default
         return dill.loads(out)
 
     async def set(self, key, value):
         """Sets a key in the collection."""
-        await self.redis.hset(self.key, {dill.dumps(key): dill.dumps(value)})
+        await self.redis.hset(
+            self.key, {dill.dumps(key, protocol=4): dill.dumps(value, protocol=4)}
+        )
 
     async def delete(self, key):
         """Removes a key. Does nothing if the key doesn't exist."""
-        await self.redis.hdel(self.key, [dill.dumps(key)])
+        await self.redis.hdel(self.key, [dill.dumps(key, protocol=4)])
 
     async def keys(self) -> typing.List[typing.Any]:
         """Lists all keys."""
